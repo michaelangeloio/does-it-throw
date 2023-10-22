@@ -1,0 +1,8 @@
+[package]
+name = "does-it-throw"
+version = "0.1.0"
+[dependencies]
+swc_common = "0.33"
+swc_ecma_parser = "0.141.3"
+swc_ecma_ast = "0.110.0"
+swc_ecma_visit = "0.96"
