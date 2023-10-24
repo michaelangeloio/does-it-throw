@@ -1,8 +1,18 @@
-[package]
-name = "does-it-throw"
-version = "0.1.0"
-[dependencies]
-swc_common = "0.33"
-swc_ecma_parser = "0.141.3"
-swc_ecma_ast = "0.110.0"
-swc_ecma_visit = "0.96"
+[workspace]
+resolver = "2"
+
+members = [
+    "does-it-throw",
+    "does-it-throw-wasm"
+]
+
+exclude = [
+    "docs/examples/quickstart/rust"
+]
+
+[profile.release]
+# Set this to true if you need to debug release builds
+debug = false
+
+[profile.bench]
+debug = true
