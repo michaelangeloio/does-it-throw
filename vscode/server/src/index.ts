@@ -4,7 +4,7 @@ import {
   PublishDiagnosticsParams,
   TextDocumentSyncKind,
 } from 'vscode-languageserver/node';
-import { PolarLanguageServer } from '../../out/does_it_throw_wasm'; // eslint-disable-line node/no-unpublished-import
+import { DITLanguageServer } from '../../out/does_it_throw_wasm'; // eslint-disable-line node/no-unpublished-import
 
 // Create LSP connection
 const connection = createConnection(ProposedFeatures.all);
@@ -13,9 +13,14 @@ const sendDiagnosticsCallback = (params: PublishDiagnosticsParams) =>
   connection.sendDiagnostics(params);
 const telemetryCallback = (event: unknown) =>
   connection.telemetry.logEvent(event);
-const pls = new PolarLanguageServer(sendDiagnosticsCallback, telemetryCallback);
+// const pls = new DITLanguageServer(sendDiagnosticsCallback, telemetryCallback);
 
-connection.onNotification((...args) => pls.onNotification(...args));
+connection.onNotification((...args) =>
+  new DITLanguageServer(
+    sendDiagnosticsCallback,
+    telemetryCallback
+  ).onNotification(...args)
+);
 
 connection.onInitialize(() => {
   return {

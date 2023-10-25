@@ -14,7 +14,7 @@ extern "C" {
 pub(crate) fn log(s: &str) {
     #[allow(unused_unsafe)]
     unsafe {
-        console_log(&("[pls] ".to_owned() + s))
+        console_log(&("[dit] ".to_owned() + s))
     }
 }
 

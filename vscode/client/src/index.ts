@@ -38,7 +38,7 @@ import {
 const extensionName = 'Does it throw? Language Server';
 
 const outputChannel = window.createOutputChannel(extensionName);
-export const osoConfigKey = 'oso.polarLanguageServer';
+export const osoConfigKey = 'oso.DITLanguageServer';
 const projectRootsKey = 'projectRoots';
 const fullProjectRootsKey = `${osoConfigKey}.${projectRootsKey}`;
 
@@ -47,7 +47,7 @@ const fullProjectRootsKey = `${osoConfigKey}.${projectRootsKey}`;
 //
 // We default to one client per workspace folder but allow users to specify
 // multiple Oso roots in a workspace folder via the
-// `oso.polarLanguageServer.projectRoots` configuration parameter.
+// `oso.DITLanguageServer.projectRoots` configuration parameter.
 //
 // TODO(gj): handle 'Untitled' docs like this example?
 // https://github.com/microsoft/vscode-extension-samples/blob/355d5851a8e87301cf814a3d20f3918cb162ff73/lsp-multi-server-sample/client/src/extension.ts#L62-L79
@@ -232,7 +232,7 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
   (await openPolarFilesInFolder(folder.uri)).forEach(f => {
     if (!polarFilesIncluded.has(f.toString()))
       outputChannel.appendLine(
-        `[pls] Polar file not included by any project root: ${f}`
+        `[dit] Polar file not included by any project root: ${f}`
       );
   });
 

@@ -5,7 +5,6 @@
   "displayName": "Does it throw",
   "author": "michaelangeloio",
   "publisher": "michaelangeloio",
-  "icon": "oso_logo.png",
   "description": "Support for Oso policies written in Polar.",
   "keywords": [
     "authorization",
