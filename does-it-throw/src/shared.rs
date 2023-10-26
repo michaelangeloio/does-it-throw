@@ -20,7 +20,7 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>, path: &str) -> (AnalysisR
           no_early_errors: false,
           disallow_ambiguous_jsx_like: true,
         }),
-        EsVersion::Es5,
+        EsVersion::Es2015,        
         StringInput::from(&*fm),
         None,
     );

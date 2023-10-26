@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-import { join, posix } from 'path';
+import { join, posix } from 'path'
 
 import {
   ExtensionContext,
@@ -12,12 +12,12 @@ import {
   workspace,
   WorkspaceFolder,
   WorkspaceFoldersChangeEvent,
-} from 'vscode';
+} from 'vscode'
 import {
   LanguageClient,
   LanguageClientOptions,
   TransportKind,
-} from 'vscode-languageclient/node';
+} from 'vscode-languageclient/node'
 
 // TODO(gj): think about what it would take to support `load_str()` via
 // https://code.visualstudio.com/api/language-extensions/embedded-languages
@@ -35,12 +35,12 @@ import {
 // https://github.com/Microsoft/vscode/issues/15178 so we have a less hacky way
 // to list all open editors (instead of just the currently visible ones).
 
-const extensionName = 'Does it throw? Language Server';
+const extensionName = 'Does it throw? Language Server'
 
-const outputChannel = window.createOutputChannel(extensionName);
-export const osoConfigKey = 'oso.DITLanguageServer';
-const projectRootsKey = 'projectRoots';
-const fullProjectRootsKey = `${osoConfigKey}.${projectRootsKey}`;
+const outputChannel = window.createOutputChannel(extensionName)
+export const osoConfigKey = 'oso.DITLanguageServer'
+const projectRootsKey = 'projectRoots'
+const fullProjectRootsKey = `${osoConfigKey}.${projectRootsKey}`
 
 // Bi-level map from workspaceFolder -> projectRoot -> client & metrics
 // recorder.
@@ -51,9 +51,9 @@ const fullProjectRootsKey = `${osoConfigKey}.${projectRootsKey}`;
 //
 // TODO(gj): handle 'Untitled' docs like this example?
 // https://github.com/microsoft/vscode-extension-samples/blob/355d5851a8e87301cf814a3d20f3918cb162ff73/lsp-multi-server-sample/client/src/extension.ts#L62-L79
-type WorkspaceFolderClient = [LanguageClient];
-type WorkspaceFolderClients = Map<string, WorkspaceFolderClient>;
-const clients: Map<string, WorkspaceFolderClients> = new Map();
+type WorkspaceFolderClient = [LanguageClient]
+type WorkspaceFolderClients = Map<string, WorkspaceFolderClient>
+const clients: Map<string, WorkspaceFolderClients> = new Map()
 
 // TODO(gj): nested workspace folders:
 //     folderA/
@@ -80,7 +80,7 @@ const clients: Map<string, WorkspaceFolderClients> = new Map();
 // part of the same policy.
 
 function polarFilesInFolderPattern(folder: Uri) {
-  return new RelativePattern(folder, '**/!(*node_modules)/*.ts');
+  return new RelativePattern(folder, '**/!(*node_modules)/*.ts')
 }
 
 // Trigger a [`didOpen`][didOpen] event for every not-already-open Polar file
@@ -98,9 +98,9 @@ function polarFilesInFolderPattern(folder: Uri) {
 //
 // [didOpen]: https://code.visualstudio.com/api/references/vscode-api#workspace.onDidOpenTextDocument
 async function openPolarFilesInFolder(folder: Uri) {
-  const pattern = polarFilesInFolderPattern(folder);
-  const uris = await workspace.findFiles(pattern);
-  return Promise.all(uris.map(openDocument));
+  const pattern = polarFilesInFolderPattern(folder)
+  const uris = await workspace.findFiles(pattern)
+  return Promise.all(uris.map(openDocument))
 }
 
 // Trigger a [`didOpen`][didOpen] event if `uri` is not already open.
@@ -110,55 +110,55 @@ async function openPolarFilesInFolder(folder: Uri) {
 //
 // [didOpen]: https://code.visualstudio.com/api/references/vscode-api#workspace.onDidOpenTextDocument
 async function openDocument(uri: Uri) {
-  const uriMatch = (d: TextDocument) => d.uri.toString() === uri.toString();
-  const doc = workspace.textDocuments.find(uriMatch);
-  if (doc === undefined) await workspace.openTextDocument(uri);
-  return uri;
+  const uriMatch = (d: TextDocument) => d.uri.toString() === uri.toString()
+  const doc = workspace.textDocuments.find(uriMatch)
+  if (doc === undefined) await workspace.openTextDocument(uri)
+  return uri
 }
 
 async function validateRoots(root: Uri, candidates: string[]) {
-  const projectRoots = [];
+  const projectRoots = []
   for (const path of [...new Set(candidates)]) {
     // Split configured path on POSIX-style separator.
-    const segments = path.split(posix.sep);
+    const segments = path.split(posix.sep)
     // But join with platform-specific separator.
-    const joinedPath = join(root.fsPath, ...segments);
-    const uri = root.with({ path: joinedPath });
+    const joinedPath = join(root.fsPath, ...segments)
+    const uri = root.with({ path: joinedPath })
     try {
-      const { type } = await workspace.fs.stat(uri);
+      const { type } = await workspace.fs.stat(uri)
       if (type === FileType.Directory) {
-        projectRoots.push(uri);
+        projectRoots.push(uri)
       } else {
         void window.showErrorMessage(
           `Invalid ${fullProjectRootsKey} configuration — path isn't a directory: ${path}`
-        );
+        )
       }
     } catch (e) {
       void window.showErrorMessage(
         `Invalid ${fullProjectRootsKey} configuration — path doesn't exist: ${path}`
-      );
+      )
     }
   }
-  return projectRoots;
+  return projectRoots
 }
 
 async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
-  const server = ctx.asAbsolutePath(join('out', 'server.js'));
+  const server = ctx.asAbsolutePath(join('out', 'server.js'))
 
   const rawProjectRoots = workspace
     .getConfiguration(osoConfigKey, folder)
-    .get<string[]>(projectRootsKey, []);
-  const roots = await validateRoots(folder.uri, rawProjectRoots);
+    .get<string[]>(projectRootsKey, [])
+  const roots = await validateRoots(folder.uri, rawProjectRoots)
 
   // If any roots were found to be invalid, early return.
-  if (roots.length < rawProjectRoots.length) return;
+  if (roots.length < rawProjectRoots.length) return
 
   // If no project roots were specified, default to treating the workspace
   // folder as the root.
-  if (roots.length === 0) roots.push(folder.uri);
+  if (roots.length === 0) roots.push(folder.uri)
 
-  const workspaceFolderClients: WorkspaceFolderClients = new Map();
-  const polarFilesIncluded: Set<string> = new Set();
+  const workspaceFolderClients: WorkspaceFolderClients = new Map()
+  const polarFilesIncluded: Set<string> = new Set()
 
   for (const root of roots) {
     // Watch `FileChangeType.Deleted` events for Polar files in the current
@@ -176,7 +176,7 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
       true, // ignoreCreateEvents
       true, // ignoreChangeEvents
       false // ignoreDeleteEvents
-    );
+    )
     // Watch `FileChangeType.Created` and `FileChangeType.Changed` events for
     // files in the current workspace, including those not open in any editor in
     // the workspace.
@@ -185,13 +185,13 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
       false, // ignoreCreateEvents
       false, // ignoreChangeEvents
       true // ignoreDeleteEvents
-    );
+    )
 
     // Clean up watchers when extension is deactivated.
-    ctx.subscriptions.push(deleteWatcher);
-    ctx.subscriptions.push(createChangeWatcher);
+    ctx.subscriptions.push(deleteWatcher)
+    ctx.subscriptions.push(createChangeWatcher)
 
-    const serverOpts = { module: server, transport: TransportKind.ipc };
+    const serverOpts = { module: server, transport: TransportKind.ipc }
     const clientOpts: LanguageClientOptions = {
       // TODO(gj): seems like I should be able to use a RelativePattern here, but
       // the TS type for DocumentFilter.pattern doesn't seem to like that.
@@ -202,11 +202,11 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
       diagnosticCollectionName: extensionName,
       workspaceFolder: folder,
       outputChannel,
-    };
-    const client = new LanguageClient(extensionName, serverOpts, clientOpts);
+    }
+    const client = new LanguageClient(extensionName, serverOpts, clientOpts)
 
     // Start client and mark it for cleanup when the extension is deactivated.
-    ctx.subscriptions.push(client.start());
+    ctx.subscriptions.push(client.start())
 
     // When a Polar document in `root` (even documents not currently open in VS
     // Code) is created or changed, trigger a [`didOpen`][didOpen] event if the
@@ -216,64 +216,65 @@ async function startClients(folder: WorkspaceFolder, ctx: ExtensionContext) {
     //
     // [didOpen]: https://code.visualstudio.com/api/references/vscode-api#workspace.onDidOpenTextDocument
     // [didChange]: https://code.visualstudio.com/api/references/vscode-api#workspace.onDidChangeTextDocument
-    ctx.subscriptions.push(createChangeWatcher.onDidCreate(openDocument));
-    ctx.subscriptions.push(createChangeWatcher.onDidChange(openDocument));
+    ctx.subscriptions.push(createChangeWatcher.onDidCreate(openDocument))
+    ctx.subscriptions.push(createChangeWatcher.onDidChange(openDocument))
 
     // Transmit the initial file system state for `root` (including files not
     // currently open in VS Code) to the server.
-    const openedFiles = await openPolarFilesInFolder(root);
-    openedFiles.forEach(f => polarFilesIncluded.add(f.toString()));
+    const openedFiles = await openPolarFilesInFolder(root)
+    openedFiles.forEach(f => polarFilesIncluded.add(f.toString()))
 
-    workspaceFolderClients.set(root.toString(), [client]);
+    workspaceFolderClients.set(root.toString(), [client])
   }
 
   // Ensure that all Polar files across the workspace were included in at least
   // one project root.
-  (await openPolarFilesInFolder(folder.uri)).forEach(f => {
+  // eslint-disable-next-line @typescript-eslint/no-extra-semi
+  ;(await openPolarFilesInFolder(folder.uri)).forEach(f => {
     if (!polarFilesIncluded.has(f.toString()))
       outputChannel.appendLine(
-        `[dit] Polar file not included by any project root: ${f}`
-      );
-  });
+        `[dit Polar file not included by any project root: ${f}`
+      )
+  })
 
-  clients.set(folder.uri.toString(), workspaceFolderClients);
+  clients.set(folder.uri.toString(), workspaceFolderClients)
 }
 
 function stopClient([client]: WorkspaceFolderClient) {
   // Clear any outstanding diagnostics.
-  client.diagnostics?.clear();
+  client.diagnostics?.clear()
   // Try flushing latest event in case one's in the chamber.
-  return client.stop();
+  return client.stop()
 }
 
 async function stopClients(workspaceFolder: string) {
-  const workspaceFolderClients = clients.get(workspaceFolder);
+  const workspaceFolderClients = clients.get(workspaceFolder)
   if (workspaceFolderClients) {
     for (const client of workspaceFolderClients.values())
-      await stopClient(client);
+      await stopClient(client)
   }
-  clients.delete(workspaceFolder);
+  clients.delete(workspaceFolder)
 }
 
 function updateClients(context: ExtensionContext) {
   return async function ({ added, removed }: WorkspaceFoldersChangeEvent) {
     // Clean up clients for removed folders.
-    for (const folder of removed) await stopClients(folder.uri.toString());
+    for (const folder of removed) await stopClients(folder.uri.toString())
 
     // Create clients for added folders.
-    for (const folder of added) await startClients(folder, context);
-  };
+    for (const folder of added) await startClients(folder, context)
+  }
 }
 
 export async function activate(context: ExtensionContext): Promise<void> {
   // Seed extension-local state from persisted VS Code memento-backed state.
-  const folders = workspace.workspaceFolders || [];
+  const folders = workspace.workspaceFolders || []
 
   // Start clients for every folder in the workspace.
-  for (const folder of folders) await startClients(folder, context);
+  for (const folder of folders) await startClients(folder, context)
 
   // Update clients when workspace folders change.
-  workspace.onDidChangeWorkspaceFolders(updateClients(context));
+  workspace.onDidChangeWorkspaceFolders(updateClients(context))
 
   // If a `projectRoots` configuration change affects any workspace folders,
   // restart all of the corresponding clients.
@@ -281,11 +282,11 @@ export async function activate(context: ExtensionContext): Promise<void> {
     workspace.onDidChangeConfiguration(async e => {
       const affected = folders.filter(folder =>
         e.affectsConfiguration(fullProjectRootsKey, folder)
-      );
+      )
 
-      await updateClients(context)({ added: affected, removed: affected });
+      await updateClients(context)({ added: affected, removed: affected })
     })
-  );
+  )
 
   // TODO(gj): is it possible to go from workspace -> no workspace? What about
   // from no workspace -> workspace?
@@ -306,5 +307,5 @@ export async function deactivate(): Promise<void> {
     [...clients.values()]
       .flatMap(workspaceFolderClients => [...workspaceFolderClients.values()])
       .map(stopClient)
-  );
+  )
 }

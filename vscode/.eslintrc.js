@@ -8,6 +8,7 @@ module.exports = {
   overrides: [
     {
       files: ['**/*.ts', '**/*.tsx'],
+      rules: { semi: ['error', 'never'] },
       extends: [
         'plugin:@typescript-eslint/recommended',
         'plugin:@typescript-eslint/recommended-requiring-type-checking',
@@ -22,4 +23,6 @@ module.exports = {
       },
     },
   ],
-};
+}
+
+

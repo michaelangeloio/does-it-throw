@@ -178,7 +178,7 @@ impl DITLanguageServer {
             log("\t\treopened tracked doc");
         }
         let uris_vec = vec![uri.clone()];
-        self.reload_kb(uris_vec)
+        self.get_diagnostics(uris_vec)
     }
 
     fn on_did_change_text_document(&mut self, doc: TextDocumentItem) -> Diagnostics {
@@ -187,67 +187,16 @@ impl DITLanguageServer {
             log(&format!("\tupdated untracked doc: {}", uri));
         }
         let uris_vec = vec![uri.clone()];
-        self.reload_kb(uris_vec)
+        self.get_diagnostics(uris_vec)
     }
 
-    // This is (currently) only used to handle deletions of ts *files*. `DidChangeWatchedFiles`
-    // events come from the `deleteWatcher` filesystem watcher in the extension client. Due to [a
-    // limitation of VS Code's filesystem watcher][0], we don't receive deletion events for ts
-    // files nested inside of a deleted directory. See corresponding comments on `DidDeleteFiles`
-    // and `DidChangeWatchedFiles` in `DITLanguageServer::on_notification`.
-    //
-    // [0]: https://github.com/microsoft/vscode/issues/60813
     fn on_did_change_watched_files(&mut self, uris: Vec<Url>) -> Diagnostics {
-        let mut diagnostics = Diagnostics::new();
-
-        for uri in &uris {
-            log(&format!("\tdeleting: {}", uri));
-
-            // If this returns `None`, `uri` was already removed from the local set of tracked
-            // documents. An easy way to encounter this is to right-click delete a ts file via
-            // the VS Code UI, which races the `DidDeleteFiles` and `DidChangeWatchedFiles` events.
-            if let Some(removed) = self.remove_document(&uri) {
-                let (_, empty_diagnostics) = empty_diagnostics_for_doc((&uri, &removed));
-                if diagnostics.insert(uri.clone(), empty_diagnostics).is_some() {
-                    log("\t\tduplicate URIs in event payload");
-                }
-            } else {
-                log("\t\tcannot delete untracked doc");
-            }
-        }
-
-        diagnostics.append(&mut self.reload_kb(uris));
-        diagnostics
+        self.get_diagnostics(uris)
     }
 
     // Returns `None` if no ts files were deleted.
     fn on_did_delete_files(&mut self, uris: Vec<Url>) -> Option<Diagnostics> {
-        let mut diagnostics = Diagnostics::new();
-
-        for uri in &uris {
-            // If `removed` is empty, `uri` wasn't a directory containing tracked ts files or
-            // `uri` itself was a ts file that was already removed via `DidChangeWatchedFiles`.
-            let removed = self.remove_documents_in_dir(&uri);
-            if !removed.is_empty() {
-                log(&format!("\tdeleting: {}", uri));
-
-                for (uri, params) in removed {
-                    log(&format!("\t\tdeleted: {}", uri));
-
-                    // NOTE(gj): fairly sure this will never be true.
-                    if diagnostics.insert(uri, params).is_some() {
-                        log("\t\t\tmultiple deletions of same doc");
-                    }
-                }
-            }
-        }
-
-        if diagnostics.is_empty() {
-            None
-        } else {
-            diagnostics.append(&mut self.reload_kb(uris));
-            Some(diagnostics)
-        }
+        None
     }
 }
 
@@ -330,9 +279,4 @@ impl DITLanguageServer {
         return Diagnostics::new();
     }
 
-    fn reload_kb(&self, uris: Vec<Url>) -> Diagnostics {
-        let mut diagnostics = self.empty_diagnostics_for_all_documents();
-        diagnostics.extend(self.get_diagnostics(uris));
-        diagnostics
-    }
 }

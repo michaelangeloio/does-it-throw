@@ -3,24 +3,29 @@ import {
   ProposedFeatures,
   PublishDiagnosticsParams,
   TextDocumentSyncKind,
-} from 'vscode-languageserver/node';
+} from 'vscode-languageserver/node'
+// eslint-disable-next-line prettier/prettier, semi
 import { DITLanguageServer } from '../../out/does_it_throw_wasm'; // eslint-disable-line node/no-unpublished-import
 
 // Create LSP connection
-const connection = createConnection(ProposedFeatures.all);
+const connection = createConnection(ProposedFeatures.all)
 
-const sendDiagnosticsCallback = (params: PublishDiagnosticsParams) =>
-  connection.sendDiagnostics(params);
-const telemetryCallback = (event: unknown) =>
-  connection.telemetry.logEvent(event);
-// const pls = new DITLanguageServer(sendDiagnosticsCallback, telemetryCallback);
+connection.onNotification((...args) => {
+  try {
+    const sendDiagnosticsCallback = (params: PublishDiagnosticsParams) =>
+      connection.sendDiagnostics(params)
+    const telemetryCallback = (event: unknown) =>
+      connection.telemetry.logEvent(event)
 
-connection.onNotification((...args) =>
-  new DITLanguageServer(
-    sendDiagnosticsCallback,
-    telemetryCallback
-  ).onNotification(...args)
-);
+    const dit = new DITLanguageServer(
+      sendDiagnosticsCallback,
+      telemetryCallback
+    )
+    dit.onNotification(...args)
+  } catch (e) {
+    console.error(e)
+  }
+})
 
 connection.onInitialize(() => {
   return {
@@ -61,7 +66,7 @@ connection.onInitialize(() => {
         },
       },
     },
-  };
-});
+  }
+})
 
-connection.listen();
+connection.listen()
