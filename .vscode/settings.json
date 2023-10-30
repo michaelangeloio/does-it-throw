@@ -1,5 +1,11 @@
 {
-  "prettier.semi": false,
-  "javascript.format.semicolons": "remove",
-  "typescript.format.semicolons": "remove"
+	"editor.insertSpaces": false,
+	"typescript.tsc.autoDetect": "off",
+	"typescript.preferences.quoteStyle": "single",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	},
+	"rust-analyzer.linkedProjects": [
+		"./crates/does-it-throw/Cargo.toml"
+	]
 }
