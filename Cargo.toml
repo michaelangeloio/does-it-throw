@@ -2,8 +2,8 @@
 resolver = "2"
 
 members = [
-    "does-it-throw",
-    "does-it-throw-wasm"
+    "crates/does-it-throw",
+    "crates/does-it-throw-wasm"
 ]
 
 exclude = [
