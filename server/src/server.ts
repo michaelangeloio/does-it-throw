@@ -1,11 +1,8 @@
 import {
-	CompletionItem,
-	CompletionItemKind,
 	DidChangeConfigurationNotification,
 	InitializeParams,
 	InitializeResult,
 	ProposedFeatures,
-	TextDocumentPositionParams,
 	TextDocumentSyncKind,
 	TextDocuments,
 	createConnection
@@ -14,7 +11,7 @@ import {
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument'
-import { parse_js } from './rust/does_it_throw'
+import { parse_js } from './rust/does_it_throw_wasm'
 
 const connection = createConnection(ProposedFeatures.all)
 
@@ -22,10 +19,14 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
-let hasDiagnosticRelatedInformationCapability = false
+// use if needed later
+// let hasDiagnosticRelatedInformationCapability = false 
+
+let rootUri: string | undefined | null
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities
+
 
 	hasConfigurationCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.configuration
@@ -33,28 +34,35 @@ connection.onInitialize((params: InitializeParams) => {
 	hasWorkspaceFolderCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.workspaceFolders
 	)
-	hasDiagnosticRelatedInformationCapability = !!(
-		capabilities.textDocument &&
-		capabilities.textDocument.publishDiagnostics &&
-		capabilities.textDocument.publishDiagnostics.relatedInformation
-	)
+	// use if needed later
+	// hasDiagnosticRelatedInformationCapability = !!(
+	// 	capabilities.textDocument &&
+	// 	capabilities.textDocument.publishDiagnostics &&
+	// 	capabilities.textDocument.publishDiagnostics.relatedInformation
+	// ) 
 
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
-			// Tell the client that this server supports code completion.
-			completionProvider: {
-				resolveProvider: true
-			}
 		}
 	}
 	if (hasWorkspaceFolderCapability) {
 		result.capabilities.workspace = {
 			workspaceFolders: {
-				supported: true
+				supported: false
 			}
 		}
+	}	
+	if (params?.workspaceFolders && params.workspaceFolders.length > 1) {
+		throw new Error('This extension only supports one workspace folder at this time')
 	}
+	if (!hasWorkspaceFolderCapability) {
+		rootUri = params.rootUri
+	}
+	else {
+		rootUri = params?.workspaceFolders?.[0]?.uri
+	}
+
 	return result
 })
 
@@ -73,25 +81,26 @@ connection.onInitialized(() => {
 })
 
 // The example settings
-interface ExampleSettings {
+interface Settings {
 	maxNumberOfProblems: number;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 }
-let globalSettings: ExampleSettings = defaultSettings
+const defaultSettings: Settings = { maxNumberOfProblems: 1000000 } 
+// 👆 very unlikely someone will have more than 1 million throw statements, lol point up
+let globalSettings: Settings = defaultSettings
 
 // Cache the settings of all open documents
-const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map()
+const documentSettings: Map<string, Thenable<Settings>> = new Map()
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
 		// Reset all cached document settings
 		documentSettings.clear()
 	} else {
-		globalSettings = <ExampleSettings>(
+		globalSettings = <Settings>(
 			(change.settings.doesItThrow || defaultSettings)
 		)
 	}
@@ -100,7 +109,9 @@ connection.onDidChangeConfiguration(change => {
 	documents.all().forEach(validateTextDocument)
 })
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+
+// TODO - use this later if needed
+function getDocumentSettings(resource: string): Thenable<Settings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings)
 	}
@@ -127,68 +138,29 @@ documents.onDidChangeContent(change => {
 })
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	console.log('\x1b[36m%s\x1b[0m', hasDiagnosticRelatedInformationCapability)
 	try {
 		const jsonString = parse_js(textDocument.getText())
-		connection.console.log(`jsonString: ${jsonString}`)
-		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: JSON.parse(jsonString) }) 
+		const diagnostics = JSON.parse(jsonString)
+		const settings = await getDocumentSettings(textDocument.uri)
+		if (settings.maxNumberOfProblems && diagnostics > settings.maxNumberOfProblems  ) {
+			connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: diagnostics.slice(0, settings.maxNumberOfProblems)})
+		} else {
+			connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: JSON.parse(jsonString) }) 
+		}
+		
 	}
 	catch (e) {
 		connection.console.log(`${e instanceof Error ? e.message: JSON.stringify(e)} error`)
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] })
 	}
-	// In this simple example we get the settings for every validate run.
-	const settings = await getDocumentSettings(textDocument.uri)
-	if (!settings) {
-		console.log('\x1b[36m%s\x1b[0m', 'no settings')
-	}
-
-
-	// Send the computed diagnostics to VSCode.
 	
 }
 
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
-	connection.console.log(`We received an file change event ${_change}`)
+	connection.console.log(`We received an file change event ${_change}, not implemented yet`)
 })
 
-// This handler provides the initial list of the completion items.
-connection.onCompletion(
-	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-		connection.console.log(`onCompletion ${_textDocumentPosition.position.line}}`)
-		// The pass parameter contains the position of the text document in
-		// which code complete got requested. For the example we ignore this
-		// info and always provide the same completion items.
-		return [
-			{
-				label: 'TypeScript',
-				kind: CompletionItemKind.Text,
-				data: 1
-			},
-			{
-				label: 'JavaScript',
-				kind: CompletionItemKind.Text,
-				data: 2
-			}
-		]
-	}
-)
-
-// This handler resolves additional information for the item selected in
-// the completion list.
-connection.onCompletionResolve(
-	(item: CompletionItem): CompletionItem => {
-		if (item.data === 1) {
-			item.detail = 'TypeScript details'
-			item.documentation = 'TypeScript documentation'
-		} else if (item.data === 2) {
-			item.detail = 'JavaScript details'
-			item.documentation = 'JavaScript documentation'
-		}
-		return item
-	}
-)
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events

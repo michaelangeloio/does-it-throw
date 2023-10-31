@@ -1,5 +1,5 @@
 {
-  "name": "does-it-throw-2",
+  "name": "does-it-throw",
   "version": "1.0.0",
   "main": "./client/out/extension",
   "devDependencies": {

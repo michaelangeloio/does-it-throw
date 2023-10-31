@@ -60,7 +60,7 @@ export function activate(context: ExtensionContext) {
 	// Create the language client and start the client.
 	client = new LanguageClient(
 		'doesItThrow',
-		'Does it Throw Server',
+		'Does it Throw? Language Server',
 		serverOptions,
 		clientOptions
 	)

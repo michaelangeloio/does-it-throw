@@ -23,7 +23,7 @@ const compile = async ({ path, ready, init }: { path: string; ready: boolean; in
       }) as any,
     )
     // TODO - use bun to bundle the code when it supports CJS (or vscode supports ESM)
-    const command = 'wasm-pack build crates/does-it-throw-wasm --target nodejs --out-dir server/src/rust'
+    const command = 'wasm-pack build crates/does-it-throw-wasm --target nodejs --out-dir ../../server/src/rust'
     try {
       log('building wasm')
       const result = Bun.spawnSync(command.split(' '), {

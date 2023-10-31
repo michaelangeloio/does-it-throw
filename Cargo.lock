@@ -96,6 +96,7 @@ dependencies = [
 name = "does-it-throw-wasm"
 version = "0.0.0"
 dependencies = [
+ "does-it-throw",
  "serde",
  "serde_json",
  "swc_common",
