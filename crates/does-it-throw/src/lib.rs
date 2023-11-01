@@ -440,10 +440,6 @@ impl Visit for CallFinder {
                 };
 
               if throw_map.function_or_method_name == called_method_name {
-                println!(
-                  "object_property_stack: {:?}",
-                  self.object_property_stack.last()
-                );
                 let call_to_throw_map = CallToThrowMap {
                   call_span: call.span,
                   throw_map: throw_map.clone(),
