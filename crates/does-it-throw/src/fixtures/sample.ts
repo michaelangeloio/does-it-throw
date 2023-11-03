@@ -1,6 +1,8 @@
 //@ts-nocheck
 import { testing as Test } from './something'
 
+import { SomeObject } from './something123'
+
 console.log('\x1b[36m%s\x1b[0m', Test)
 
 export function hiKhue() {
@@ -45,6 +47,11 @@ export class Something {
 		}
 		this.nestedThrow()
 	}
+
+	callImportedThrow () {
+		SomeObject.someImportedThrow()
+	}
+
 }
 
 

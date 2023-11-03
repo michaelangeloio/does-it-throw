@@ -8,8 +8,8 @@ use std::hash::{Hash, Hasher};
 use std::vec;
 
 use swc_ecma_ast::{
-  AssignExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl, MemberExpr, MethodProp, PatOrExpr,
-  VarDeclarator,
+  AssignExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl, Ident, MemberExpr, MethodProp,
+  PatOrExpr, VarDeclarator,
 };
 
 use self::swc_common::{sync::Lrc, SourceMap, Span};
@@ -42,9 +42,11 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
     json_parse_calls: vec![],
     fs_access_calls: vec![],
     import_sources: HashSet::new(),
-    imported_identifiers: HashSet::new(),
+    imported_identifiers: Vec::new(),
     function_name_stack: vec![],
     current_class_name: None,
+    current_method_name: None,
+    imported_identifier_usages: vec![],
   };
   collector.visit_module(&module);
   let mut call_collector = CallFinder {
@@ -74,6 +76,25 @@ impl Visit for ThrowFinder {
   }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct IdentifierUsage {
+  pub usage_span: Span,
+  pub identifier_name: String,
+  pub usage_context: String,
+  pub id: String,
+}
+
+impl IdentifierUsage {
+  pub fn new(usage_span: Span, identifier_name: String, usage_context: String, id: String) -> Self {
+    Self {
+      usage_span,
+      identifier_name,
+      usage_context,
+      id,
+    }
+  }
+}
+
 #[derive(Default)]
 
 pub struct AnalysisResult {
@@ -82,7 +103,8 @@ pub struct AnalysisResult {
   pub json_parse_calls: Vec<String>,
   pub fs_access_calls: Vec<String>,
   pub import_sources: HashSet<String>,
-  pub imported_identifiers: HashSet<String>,
+  pub imported_identifiers: Vec<String>,
+  pub imported_identifier_usages: Vec<IdentifierUsage>,
 }
 
 struct CombinedAnalyzers {
@@ -99,6 +121,7 @@ impl From<CombinedAnalyzers> for AnalysisResult {
       fs_access_calls: analyzers.throw_analyzer.fs_access_calls,
       import_sources: analyzers.throw_analyzer.import_sources,
       imported_identifiers: analyzers.throw_analyzer.imported_identifiers,
+      imported_identifier_usages: analyzers.throw_analyzer.imported_identifier_usages,
     }
   }
 }
@@ -134,9 +157,11 @@ struct ThrowAnalyzer {
   json_parse_calls: Vec<String>,
   fs_access_calls: Vec<String>,
   import_sources: HashSet<String>,
-  imported_identifiers: HashSet<String>,
+  imported_identifiers: Vec<String>,
   function_name_stack: Vec<String>,
   current_class_name: Option<String>,
+  current_method_name: Option<String>,
+  imported_identifier_usages: Vec<IdentifierUsage>,
 }
 
 impl ThrowAnalyzer {
@@ -179,7 +204,7 @@ impl ThrowAnalyzer {
         ImportSpecifier::Default(default_spec) => {
           self
             .imported_identifiers
-            .insert(default_spec.local.sym.to_string());
+            .push(default_spec.local.sym.to_string());
         }
         ImportSpecifier::Named(named_spec) => {
           let imported_name = match &named_spec.imported {
@@ -189,12 +214,12 @@ impl ThrowAnalyzer {
             },
             None => named_spec.local.sym.to_string(),
           };
-          self.imported_identifiers.insert(imported_name);
+          self.imported_identifiers.push(imported_name);
         }
         ImportSpecifier::Namespace(namespace_spec) => {
           self
             .imported_identifiers
-            .insert(namespace_spec.local.sym.to_string());
+            .push(namespace_spec.local.sym.to_string());
         }
       }
     }
@@ -202,6 +227,77 @@ impl ThrowAnalyzer {
 }
 
 impl Visit for ThrowAnalyzer {
+
+  fn visit_call_expr(&mut self, call: &CallExpr) {
+    if let swc_ecma_ast::Callee::Expr(expr) = &call.callee {
+      match &**expr {
+        Expr::Member(member_expr) => {
+          if let Expr::Ident(object_ident) = &*member_expr.obj {
+            self.current_class_name = Some(object_ident.sym.to_string());
+          }
+
+          if let MemberProp::Ident(method_ident) = &member_expr.prop {
+            self.current_method_name = Some(method_ident.sym.to_string());
+          }
+
+          if let (Some(current_class_name), Some(current_method_name)) = (
+            self.current_class_name.clone(),
+            self.current_method_name.clone(),
+          ) {
+            if self.imported_identifiers.contains(&current_class_name) {
+              let usage_context = current_method_name.clone();
+              let id = format!(
+                "{}-{}",
+                self
+                  .current_class_name
+                  .clone()
+                  .unwrap_or_else(|| "NOT_SET".to_string()),
+                usage_context
+              );
+              // Create and store the identifier usage information
+              let usage_map = IdentifierUsage::new(
+                call.span,
+                current_class_name.clone(),
+                usage_context.clone(),
+                id.clone(),
+              );
+              self.imported_identifier_usages.push(usage_map);
+            }
+          }
+          self.current_class_name = None;
+          self.current_method_name = None;
+        }
+
+        Expr::Ident(ident) => {
+          let called_function_name = ident.sym.to_string();
+          if self.imported_identifiers.contains(&called_function_name) {
+            let usage_context = self
+              .function_name_stack
+              .last()
+              .cloned()
+              .unwrap_or_else(|| "<anonymous>".to_string());
+            let id = format!(
+              "{}-{}",
+              self
+                .current_class_name
+                .clone()
+                .unwrap_or_else(|| "NOT_SET".to_string()),
+              called_function_name
+            );
+            let usage_map = IdentifierUsage::new(
+              call.span,
+              called_function_name.clone(),
+              usage_context.clone(),
+              id.clone(),
+            );
+            self.imported_identifier_usages.push(usage_map);
+          }
+        }
+        _ => {}
+      }
+    }
+  }
+
   fn visit_fn_decl(&mut self, fn_decl: &FnDecl) {
     let function_name = fn_decl.ident.sym.to_string();
     self.function_name_stack.push(function_name);

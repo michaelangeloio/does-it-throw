@@ -6,12 +6,14 @@ extern crate swc_ecma_parser;
 extern crate swc_ecma_visit;
 extern crate wasm_bindgen;
 
-use self::serde::{Serialize, Serializer};
+use std::collections::HashMap;
+
+use self::serde::{Deserialize, Serialize, Serializer};
 use self::swc_common::{sync::Lrc, SourceMap, SourceMapper, Span};
 use swc_common::BytePos;
 use wasm_bindgen::prelude::*;
 
-use does_it_throw::analyze_code;
+use does_it_throw::{analyze_code, AnalysisResult, IdentifierUsage};
 
 // Define an extern block with the `console.log` function.
 #[wasm_bindgen]
@@ -19,8 +21,6 @@ extern "C" {
   #[wasm_bindgen(js_namespace = console)]
   fn log(s: &str);
 }
-
-// TODO - Maybe don't serialize the whole diagnostic struct, just the fields we need, or not at all
 
 #[derive(Serialize)]
 pub struct Diagnostic {
@@ -83,17 +83,181 @@ fn get_line_end_byte_pos(cm: &SourceMap, lo_byte_pos: BytePos, hi_byte_pos: Byte
   }
 }
 
-#[wasm_bindgen]
-pub fn parse_js(js_code: &str) -> String {
-  let cm: Lrc<SourceMap> = Default::default();
+fn get_line_start_byte_pos(cm: &SourceMap, lo_byte_pos: BytePos, hi_byte_pos: BytePos) -> BytePos {
+  let src = cm
+    .span_to_snippet(Span::new(lo_byte_pos, hi_byte_pos, Default::default()))
+    .unwrap_or_default();
 
-  let (results, cm) = analyze_code(js_code, cm);
-  for import in results.import_sources.into_iter() {
-    log(&format!("Import source: {}", import));
+  // Split the source into lines and reverse the list to find the newline character from the end (which would be the start of the line)
+  let lines = src.lines().rev().collect::<Vec<&str>>();
+
+  if let Some(last_line) = lines.iter().next() {
+    // Calculate the byte position of the start of the line of interest
+    let start_pos = last_line.chars().position(|c| c != ' ' && c != '\t');
+    let line_start_byte_pos = if let Some(pos) = start_pos {
+      hi_byte_pos - BytePos((last_line.len() - pos) as u32)
+    } else {
+      // If there's no content (only whitespace), then we are at the start of the line
+      hi_byte_pos - BytePos(last_line.len() as u32)
+    };
+    line_start_byte_pos
+  } else {
+    // If there's no newline character, then we are at the start of the file
+    BytePos(0)
   }
-  for identifier in results.imported_identifiers.into_iter() {
-    log(&format!("Imported identifier: {}", identifier));
+}
+
+fn get_relative_imports(import_sources: Vec<String>) -> Vec<String> {
+  let mut relative_imports: Vec<String> = Vec::new();
+  for import_source in import_sources {
+    if import_source.starts_with("./") || import_source.starts_with("../") {
+      relative_imports.push(import_source);
+    }
   }
+  relative_imports
+}
+
+#[derive(Serialize)]
+pub struct ImportedIdentifiers {
+  pub diagnostics: Vec<Diagnostic>,
+  pub id: String,
+}
+
+pub fn identifier_usages_vec_to_combined_map(
+  identifier_usages: Vec<IdentifierUsage>,
+  cm: &SourceMap,
+) -> HashMap<String, ImportedIdentifiers> {
+  let mut identifier_usages_map: HashMap<String, ImportedIdentifiers> = HashMap::new();
+  for identifier_usage in identifier_usages {
+    let identifier_name = identifier_usage.id.clone();
+    let identifier_diagnostics =
+      identifier_usages_map
+        .entry(identifier_name)
+        .or_insert(ImportedIdentifiers {
+          diagnostics: Vec::new(),
+          id: identifier_usage.id,
+        });
+    let start = cm.lookup_char_pos(identifier_usage.usage_span.lo());
+    let end = cm.lookup_char_pos(identifier_usage.usage_span.hi());
+
+    identifier_diagnostics.diagnostics.push(Diagnostic {
+      severity: DiagnosticSeverity::Information.to_int(),
+      range: DiagnosticRange {
+        start: DiagnosticPosition {
+          line: start.line - 1,
+          character: start.col_display,
+        },
+        end: DiagnosticPosition {
+          line: end.line - 1,
+          character: end.col_display,
+        },
+      },
+      message: "Function imported that may throw.".to_string(),
+      source: "Does it Throw?".to_string(),
+    });
+  }
+  identifier_usages_map
+}
+
+#[derive(Serialize)]
+pub struct ParseResult {
+  pub diagnostics: Vec<Diagnostic>,
+  pub relative_imports: Vec<String>,
+  pub throw_ids: Vec<String>,
+  pub imported_identifiers_diagnostics: HashMap<String, ImportedIdentifiers>,
+}
+
+impl ParseResult {
+  pub fn into(
+    diagnostics: Vec<Diagnostic>,
+    results: AnalysisResult,
+    cm: &SourceMap,
+  ) -> ParseResult {
+    ParseResult {
+      diagnostics,
+      throw_ids: results
+        .functions_with_throws
+        .into_iter()
+        .map(|f| f.id)
+        .collect(),
+      relative_imports: get_relative_imports(results.import_sources.into_iter().collect()),
+      imported_identifiers_diagnostics: identifier_usages_vec_to_combined_map(
+        results.imported_identifier_usages,
+        &cm,
+      ),
+    }
+  }
+}
+
+#[wasm_bindgen(typescript_custom_section)]
+const TypeScriptSettings: &'static str = r#"
+interface TypeScriptSettings {
+	decorators?: boolean;
+}
+"#;
+
+#[wasm_bindgen(typescript_custom_section)]
+const InputData: &'static str = r#"
+interface InputData {
+	uri: string;
+	file_content: string;
+	typescript_settings?: TypeScriptSettings;
+	ids_to_check: string[];
+}
+"#;
+
+#[wasm_bindgen(typescript_custom_section)]
+const ImportedIdentifiers: &'static str = r#"
+interface ImportedIdentifiers {
+	diagnostics: Diagnostic[];
+	id: string;
+}
+"#;
+
+#[wasm_bindgen(typescript_custom_section)]
+const ParseResult: &'static str = r#"
+interface ParseResult {
+	diagnostics: any[];
+	relative_imports: string[];
+	throw_ids: string[];
+	imported_identifiers_diagnostics: Map<string, ImportedIdentifiers>;
+}
+"#;
+
+#[wasm_bindgen]
+extern "C" {
+  #[wasm_bindgen(typescript_type = "ParseResult")]
+  pub type ParseResultType;
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TypeScriptSettings {
+  decorators: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct InputData {
+  uri: String,
+  file_content: String,
+  typescript_settings: Option<TypeScriptSettings>,
+  ids_to_check: Vec<String>,
+}
+
+#[wasm_bindgen]
+pub fn parse_js(data: JsValue) -> JsValue {
+  // Parse the input data into a Rust struct.
+  let input_data: InputData = serde_wasm_bindgen::from_value(data).unwrap();
+
+  let cm: Lrc<SourceMap> = Default::default();
+  let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+  let (results, cm) = analyze_code(&input_data.file_content, cm);
+  // for import in results.import_sources.clone().into_iter() {
+  //   log(&format!("Import source: {}", import));
+  // }
+  // for identifier in results.imported_identifiers.clone().into_iter() {
+  //   log(&format!("Imported identifier: {}", identifier));
+  // }
 
   // TODO - Remove this or put behind debug flag
   // println!("Functions that throw:");
@@ -120,7 +284,6 @@ pub fn parse_js(js_code: &str) -> String {
   // format!("Functions that throw parsed");
 
   // Transform results into diagnostics
-  let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
   for fun in &results.functions_with_throws {
     let function_start = cm.lookup_char_pos(fun.throw_statement.lo());
@@ -129,12 +292,16 @@ pub fn parse_js(js_code: &str) -> String {
 
     let function_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
+    let start_character_byte_pos =
+      get_line_start_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
+    let start_character = cm.lookup_char_pos(start_character_byte_pos);
+
     diagnostics.push(Diagnostic {
       severity: DiagnosticSeverity::Hint.to_int(),
       range: DiagnosticRange {
         start: DiagnosticPosition {
           line: function_start.line - 1,
-          character: function_start.col_display,
+          character: start_character.col_display,
         },
         end: DiagnosticPosition {
           line: function_end.line - 1,
@@ -189,6 +356,8 @@ pub fn parse_js(js_code: &str) -> String {
     });
   }
 
+  let parse_result = ParseResult::into(diagnostics, results, &cm);
+
   // Convert the diagnostics to a JSON string
-  serde_json::to_string(&diagnostics).unwrap()
+  serde_wasm_bindgen::to_value(&parse_result).unwrap()
 }
