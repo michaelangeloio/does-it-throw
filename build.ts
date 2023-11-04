@@ -17,7 +17,7 @@ const compile = async ({ path, ready, init }: { path: string; ready: boolean; in
         resolveFrom: 'cwd',
         assets: {
           from: ['./server/src/rust/**/*'],
-          to: ['./server/out/rust'],
+          to: ['./server/out'],
         },
         watch: true,
       }) as any,
@@ -44,8 +44,13 @@ const compile = async ({ path, ready, init }: { path: string; ready: boolean; in
   const compileClient = async () => {
     log('compiling client ts')
     await esbuild({
+			minify: true,
+			sourcemap: true,
+			bundle: true,
       outdir: 'client/out',
       entryPoints: ['client/src/extension.ts'],
+			external: ['vscode'],
+			platform: 'node',
       format: 'cjs',
       tsconfig: 'client/tsconfig.json',
       plugins,
@@ -57,6 +62,11 @@ const compile = async ({ path, ready, init }: { path: string; ready: boolean; in
     log('compiling server ts')
     await esbuild({
       outdir: 'server/out',
+			minify: true,
+			bundle: true,
+			sourcemap: true,
+			platform: 'node',
+			external: ['vscode'],
       entryPoints: ['server/src/server.ts'],
       format: 'cjs',
       tsconfig: 'server/tsconfig.json',

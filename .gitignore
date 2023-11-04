@@ -1,3 +1,4 @@
 # common rust ignores
 target
 node_modules/
+**.vsix
