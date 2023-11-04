@@ -2,7 +2,7 @@ extern crate does_it_throw;
 extern crate swc_common;
 use std::fs;
 
-use self::swc_common::{sync::Lrc, SourceMap, Span};
+use self::swc_common::{sync::Lrc, SourceMap};
 use does_it_throw::analyze_code;
 
 pub fn main() {

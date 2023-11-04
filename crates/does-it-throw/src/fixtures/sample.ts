@@ -64,3 +64,28 @@ export function somethingElse () {
 export function callHiKhue () {
 	hiKhue()
 }
+
+export const someObjectLiteral = {
+	objectLiteralThrow() {
+		throw new Error('hi khue')
+	},
+	nestedObjectLiteral: {
+		nestedObjectLiteralThrow: () => {
+			throw new Error('hi khue')
+		}
+	}
+}
+
+export const SomeObject = {
+  someExampleThrow: () => {
+    throw new Error('hi khue')
+  }
+}
+
+export const someConstThatThrows = () => {
+	throw new Error('hi khue')
+}
+
+export function callToLiteral () {
+	someObjectLiteral.objectLiteralThrow()
+}

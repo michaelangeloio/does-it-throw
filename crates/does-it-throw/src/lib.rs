@@ -8,8 +8,9 @@ use std::hash::{Hash, Hasher};
 use std::vec;
 
 use swc_ecma_ast::{
-  AssignExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl, Ident, MemberExpr, MethodProp,
-  PatOrExpr, VarDeclarator,
+  AssignExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread,
+  JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr, ObjectLit, PatOrExpr, Prop,
+  PropName, PropOrSpread, VarDeclarator,
 };
 
 use self::swc_common::{sync::Lrc, SourceMap, Span};
@@ -24,11 +25,11 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
   let fm = cm.new_source_file(swc_common::FileName::Anon, content.into());
   let lexer = Lexer::new(
     Syntax::Typescript(swc_ecma_parser::TsConfig {
-      tsx: false,
-      decorators: false,
+      tsx: true,
+      decorators: true,
       dts: false,
       no_early_errors: false,
-      disallow_ambiguous_jsx_like: true,
+      disallow_ambiguous_jsx_like: false,
     }),
     EsVersion::latest(),
     StringInput::from(&*fm),
@@ -66,6 +67,15 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
   (combined_analyzers.into(), cm)
 }
 
+fn prop_name_to_string(prop_name: &PropName) -> String {
+  match prop_name {
+    PropName::Ident(ident) => ident.sym.to_string(),
+    PropName::Str(str_) => str_.value.to_string(),
+    PropName::Num(num) => num.value.to_string(),
+    _ => "anonymous".to_string(), // Fallback for unnamed functions
+  }
+}
+
 struct ThrowFinder {
   throw_spans: Vec<Span>,
 }
@@ -96,7 +106,6 @@ impl IdentifierUsage {
 }
 
 #[derive(Default)]
-
 pub struct AnalysisResult {
   pub functions_with_throws: HashSet<ThrowMap>,
   pub calls_to_throws: HashSet<CallToThrowMap>,
@@ -127,7 +136,6 @@ impl From<CombinedAnalyzers> for AnalysisResult {
 }
 
 #[derive(Clone)]
-
 pub struct ThrowMap {
   pub throw_spans: Vec<Span>,
   pub throw_statement: Span,
@@ -197,6 +205,38 @@ impl ThrowAnalyzer {
     }
   }
 
+  fn check_arrow_function_for_throws(&mut self, arrow_function: &swc_ecma_ast::ArrowExpr) {
+    let mut throw_finder = ThrowFinder {
+      throw_spans: vec![],
+    };
+    throw_finder.visit_arrow_expr(arrow_function);
+    if !throw_finder.throw_spans.is_empty() {
+      let throw_map = ThrowMap {
+        throw_spans: throw_finder.throw_spans,
+        throw_statement: arrow_function.span,
+        function_or_method_name: self
+          .function_name_stack
+          .last()
+          .cloned()
+          .unwrap_or_else(|| "<anonymous>".to_string()),
+        class_name: None,
+        id: format!(
+          "{}-{}",
+          self
+            .current_class_name
+            .clone()
+            .unwrap_or_else(|| "NOT_SET".to_string()),
+          self
+            .function_name_stack
+            .last()
+            .cloned()
+            .unwrap_or_else(|| "<anonymous>".to_string())
+        ),
+      };
+      self.functions_with_throws.insert(throw_map);
+    }
+  }
+
   fn register_import(&mut self, import: &ImportDecl) {
     self.import_sources.insert(import.src.value.to_string());
     for specifier in &import.specifiers {
@@ -226,8 +266,12 @@ impl ThrowAnalyzer {
   }
 }
 
-impl Visit for ThrowAnalyzer {
+// --------- ThrowAnalyzer Visitor implementation ---------
+// `ThrowAnalyzer` uses the Visitor pattern to traverse the AST of JavaScript or TypeScript code.
+// Its primary goal is to identify functions that throw exceptions and record their context.
+// It also records the usage of imported identifiers to help identify the context of function calls.
 
+impl Visit for ThrowAnalyzer {
   fn visit_call_expr(&mut self, call: &CallExpr) {
     if let swc_ecma_ast::Callee::Expr(expr) = &call.callee {
       match &**expr {
@@ -307,27 +351,146 @@ impl Visit for ThrowAnalyzer {
     self.function_name_stack.pop();
   }
 
+  fn visit_object_lit(&mut self, object_lit: &ObjectLit) {
+    // Iterate over the properties of the object literal
+    for prop in &object_lit.props {
+      match prop {
+        // Check for method properties (e.g., someImportedThrow: () => { ... })
+        PropOrSpread::Prop(prop) => {
+          if let Prop::Method(method_prop) = &**prop {
+            if let Some(method_name) = &method_prop.key.as_ident() {
+              let method_name: String = method_name.sym.to_string();
+
+              self.function_name_stack.push(method_name.clone());
+
+              let mut throw_finder = ThrowFinder {
+                throw_spans: vec![],
+              };
+              throw_finder.visit_function(&method_prop.function);
+
+              if !throw_finder.throw_spans.is_empty() {
+                let throw_map = ThrowMap {
+                  throw_spans: throw_finder.throw_spans,
+                  throw_statement: method_prop.function.span,
+                  function_or_method_name: method_name.clone(),
+                  class_name: self.current_class_name.clone(),
+                  id: format!(
+                    "{}-{}",
+                    self
+                      .current_class_name
+                      .clone()
+                      .unwrap_or_else(|| "NOT_SET".to_string()),
+                    method_name
+                  ),
+                };
+                self.functions_with_throws.insert(throw_map);
+              }
+
+              self.function_name_stack.pop();
+            }
+          }
+          if let Prop::KeyValue(key_value_prop) = &**prop {
+            match &*key_value_prop.value {
+              Expr::Fn(fn_expr) => {
+                let mut throw_finder = ThrowFinder {
+                  throw_spans: vec![],
+                };
+                throw_finder.visit_function(&fn_expr.function);
+                let function_name = prop_name_to_string(&key_value_prop.key);
+
+                if !throw_finder.throw_spans.is_empty() {
+                  let throw_map = ThrowMap {
+                    throw_spans: throw_finder.throw_spans,
+                    throw_statement: fn_expr.function.span,
+                    function_or_method_name: function_name.clone(),
+                    class_name: self.current_class_name.clone(),
+                    id: format!(
+                      "{}-{}",
+                      self
+                        .current_class_name
+                        .clone()
+                        .unwrap_or_else(|| "NOT_SET".to_string()),
+                      function_name
+                    ),
+                  };
+                  self.functions_with_throws.insert(throw_map);
+                }
+              }
+              Expr::Arrow(arrow_expr) => {
+                let mut throw_finder = ThrowFinder {
+                  throw_spans: vec![],
+                };
+                throw_finder.visit_arrow_expr(arrow_expr);
+                let function_name = prop_name_to_string(&key_value_prop.key);
+
+                if !throw_finder.throw_spans.is_empty() {
+                  let throw_map = ThrowMap {
+                    throw_spans: throw_finder.throw_spans,
+                    throw_statement: arrow_expr.span,
+                    function_or_method_name: function_name.clone(),
+                    class_name: self.current_class_name.clone(),
+                    id: format!(
+                      "{}-{}",
+                      self
+                        .current_class_name
+                        .clone()
+                        .unwrap_or_else(|| "NOT_SET".to_string()),
+                      function_name
+                    ),
+                  };
+                  self.functions_with_throws.insert(throw_map);
+                }
+              }
+              _ => {}
+            }
+          }
+        }
+        _ => {}
+      }
+    }
+    swc_ecma_visit::visit_object_lit(self, object_lit);
+  }
+
   fn visit_var_declarator(&mut self, declarator: &VarDeclarator) {
     if let Some(ident) = &declarator.name.as_ident() {
       if let Some(init) = &declarator.init {
-        if matches!(&**init, Expr::Fn(_) | Expr::Arrow(_)) {
-          let function_name = ident.sym.to_string();
-          self.function_name_stack.push(function_name);
-        }
-      }
-    }
+        let function_name = ident.sym.to_string();
+        let mut throw_finder = ThrowFinder {
+          throw_spans: vec![],
+        };
 
-    swc_ecma_visit::visit_var_declarator(self, declarator);
-
-    if let Some(ident) = &declarator.name.as_ident() {
-      if let Some(init) = &declarator.init {
-        if matches!(&**init, Expr::Fn(_) | Expr::Arrow(_)) {
+        // Check if the init is a function expression or arrow function
+        if let Expr::Fn(fn_expr) = &**init {
+          self.function_name_stack.push(function_name.clone());
+          throw_finder.visit_function(&fn_expr.function);
+          self.function_name_stack.pop();
+        } else if let Expr::Arrow(arrow_expr) = &**init {
+          self.function_name_stack.push(function_name.clone());
+          throw_finder.visit_arrow_expr(arrow_expr);
           self.function_name_stack.pop();
         }
+
+        if !throw_finder.throw_spans.is_empty() {
+          let throw_map = ThrowMap {
+            throw_spans: throw_finder.throw_spans,
+            throw_statement: declarator.span,
+            function_or_method_name: function_name.clone(),
+            class_name: self.current_class_name.clone(),
+            id: format!(
+              "{}-{}",
+              self
+                .current_class_name
+                .clone()
+                .unwrap_or_else(|| "NOT_SET".to_string()),
+              function_name
+            ),
+          };
+          self.functions_with_throws.insert(throw_map);
+        }
       }
     }
+    swc_ecma_visit::visit_var_declarator(self, declarator);
   }
-
   fn visit_assign_expr(&mut self, assign_expr: &AssignExpr) {
     if let PatOrExpr::Expr(expr) = &assign_expr.left {
       if let Expr::Ident(ident) = &**expr {
@@ -358,6 +521,11 @@ impl Visit for ThrowAnalyzer {
   fn visit_function(&mut self, function: &Function) {
     self.check_function_for_throws(function);
     swc_ecma_visit::visit_function(self, function);
+  }
+
+  fn visit_arrow_expr(&mut self, arrow_expr: &swc_ecma_ast::ArrowExpr) {
+    self.check_arrow_function_for_throws(&arrow_expr);
+    swc_ecma_visit::visit_arrow_expr(self, arrow_expr);
   }
 
   fn visit_class_method(&mut self, class_method: &ClassMethod) {
@@ -434,6 +602,8 @@ impl Eq for CallToThrowMap {}
 impl Hash for CallToThrowMap {
   fn hash<H: Hasher>(&self, state: &mut H) {
     self.id.hash(state);
+		self.call_span.lo.hash(state);
+		self.call_span.hi.hash(state);
   }
 }
 
@@ -464,6 +634,26 @@ struct CallFinder {
   function_name_stack: Vec<String>,
   object_property_stack: Vec<String>,
 }
+
+// ----- CallFinder Visitor implementation -----
+/// This module defines structures and implements functionality for identifying and mapping
+/// function calls to their respective functions or methods that throw exceptions. It uses
+/// SWC's visitor pattern to traverse the AST (Abstract Syntax Tree) of JavaScript or TypeScript code.
+/// 
+/// `CallToThrowMap` records the mapping of a function call to a function that throws.
+/// It captures the span of the call, the name of the function/method being called, 
+/// the class name if the call is a method call, and the `ThrowMap` that provides details
+/// about the throw statement in the called function/method.
+/// 
+/// `InstantiationsMap` keeps track of class instantiations by recording the class name
+/// and the variable name that holds the instance.
+/// 
+/// `CallFinder` is the core structure that uses the Visitor pattern to traverse the AST nodes.
+/// It maintains state as it goes through the code, keeping track of current class names,
+/// function name stacks, and object property stacks. As it finds function calls, it tries
+/// to match them with known functions or methods that throw exceptions using the data
+/// accumulated in `functions_with_throws`. When a match is found, it records the mapping
+/// in `calls`. It also tracks instantiations of classes to help resolve method calls.
 
 impl Visit for CallFinder {
   fn visit_class_decl(&mut self, class_decl: &ClassDecl) {
@@ -499,6 +689,25 @@ impl Visit for CallFinder {
     swc_ecma_visit::visit_class_method(self, method);
 
     self.object_property_stack.pop();
+  }
+
+  fn visit_jsx_opening_element(&mut self, jsx_opening_element: &JSXOpeningElement) {
+    for attr in &jsx_opening_element.attrs {
+      if let JSXAttrOrSpread::JSXAttr(attr) = attr {
+        self.visit_jsx_attr(attr);
+      }
+    }
+  }
+
+  fn visit_jsx_attr(&mut self, jsx_attr: &JSXAttr) {
+    if let Some(JSXAttrValue::JSXExprContainer(expr_container)) = &jsx_attr.value {
+      if let JSXExpr::Expr(expr) = &expr_container.expr {
+        // Check if the expression is a function call
+        if let Expr::Call(call_expr) = &**expr {
+          self.visit_call_expr(call_expr)
+        }
+      }
+    }
   }
 
   fn visit_call_expr(&mut self, call: &CallExpr) {

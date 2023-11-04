@@ -8,7 +8,7 @@ import {
 	createConnection,
 } from 'vscode-languageserver/node'
 
-import { readFile } from 'fs/promises'
+import { access, constants, readFile } from 'fs/promises'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { InputData, ParseResult, parse_js } from './rust/does_it_throw_wasm'
 import path = require('path')
@@ -81,7 +81,8 @@ interface Settings {
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
 const defaultSettings: Settings = { maxNumberOfProblems: 1000000 }
-// 👆 very unlikely someone will have more than 1 million throw statements, lol point up
+// 👆 very unlikely someone will have more than 1 million throw statements, lol
+// if you do, might want to rethink your code?
 let globalSettings: Settings = defaultSettings
 
 // Cache the settings of all open documents
@@ -122,9 +123,34 @@ documents.onDidClose((e) => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent((change) => {
+documents.onDidChangeContent(async (change) => {
   validateTextDocument(change.document)
 })
+
+documents.onDidSave((change) => {
+  validateTextDocument(change.document)
+})
+
+const _checkAccessOnFile = async (file: string) => {
+  try {
+    await access(file, constants.R_OK)
+    return Promise.resolve(file)
+  } catch (e) {
+    return Promise.reject(e)
+  }
+}
+
+const findFirstFileThatExists = async (uri: string, relative_import: string) => {
+  const isTs = uri.endsWith('.ts') || uri.endsWith('.tsx')
+  const baseUri = `${path.resolve(path.dirname(uri.replace('file://', '')), relative_import)}`
+  let files = Array(4)
+  if (isTs) {
+    files = [`${baseUri}.ts`, `${baseUri}.tsx`, `${baseUri}.js`, `${baseUri}.jsx`]
+  } else {
+    files = [`${baseUri}.js`, `${baseUri}.jsx`, `${baseUri}.ts`, `${baseUri}.tsx`]
+  }
+  return Promise.race(files.map(_checkAccessOnFile))
+}
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   try {
@@ -140,36 +166,53 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
     if (analysis.relative_imports.length > 0) {
       const resolvedImports = analysis.relative_imports.map((relative_import) => {
-        return `${path.resolve(path.dirname(textDocument.uri.replace('file://', '')), relative_import)}.ts`
+        return findFirstFileThatExists(textDocument.uri, relative_import)
       })
-			const files = await Promise.all(resolvedImports.map((file) => {
-				return readFile(file, 'utf-8')
-			}))
-			const analysisArr = files.map((file) => {
-				const opts = {
-					uri: textDocument.uri,
-					file_content: file,
-					ids_to_check: [],
-					typescript_settings: {
-						decorators: true,
-					},
-				} satisfies InputData
-				return parse_js(opts) as ParseResult
-			})
-
-			analysisArr.forEach((import_analysis) => {
-				if (import_analysis.throw_ids.length) {
-					import_analysis.throw_ids.forEach((throw_id) => {
-						const newDiagnostics = analysis.imported_identifiers_diagnostics.get(throw_id)
-						if (newDiagnostics &&  newDiagnostics?.diagnostics?.length) {
-							analysis.diagnostics.push(...newDiagnostics.diagnostics)
-						}
-					})
-				}
-			})
+      const files = await Promise.all(
+        resolvedImports.map(async (file) => {
+          try {
+            return readFile(await file, 'utf-8')
+          } catch (e) {
+            connection.console.log(`Error reading file ${e}`)
+            return undefined
+          }
+        }),
+      )
+      const analysisArr = files.map((file) => {
+        if (!file) {
+          return undefined
+        }
+        const opts = {
+          uri: textDocument.uri,
+          file_content: file,
+          ids_to_check: [],
+          typescript_settings: {
+            decorators: true,
+          },
+        } satisfies InputData
+        return parse_js(opts) as ParseResult
+      })
+      // TODO - this is a bit of a mess, but it works for now.
+      // The original analysis is the one that has the throw statements Map()
+      // We get the get the throw_ids from the imported analysis and then
+      // check the original analysis for existing throw_ids
+      // This allows to to get the diagnostics from the imported analysis (one level deep for now)
+      analysisArr.forEach((import_analysis) => {
+        if (!import_analysis) {
+          return
+        }
+        if (import_analysis.throw_ids.length) {
+          import_analysis.throw_ids.forEach((throw_id) => {
+            const newDiagnostics = analysis.imported_identifiers_diagnostics.get(throw_id)
+            if (newDiagnostics && newDiagnostics?.diagnostics?.length) {
+              analysis.diagnostics.push(...newDiagnostics.diagnostics)
+            }
+          })
+        }
+      })
     }
 
-		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: analysis.diagnostics })
+    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: analysis.diagnostics })
   } catch (e) {
     connection.console.log(`${e instanceof Error ? e.message : JSON.stringify(e)} error`)
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] })
