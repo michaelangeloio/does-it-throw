@@ -350,7 +350,7 @@ interface InputData {
 #[wasm_bindgen(typescript_custom_section)]
 const ImportedIdentifiers: &'static str = r#"
 interface ImportedIdentifiers {
-	diagnostics: Diagnostic[];
+	diagnostics: any[];
 	id: string;
 }
 "#;

@@ -1,0 +1,11 @@
+# Ignore everything.
+**
+
+# Selectively un-ignore files we want included in the released extension.
+!CHANGELOG.md
+!language-configuration.json
+!LICENSE.txt
+!client/out/**/*
+!server/out/**/*
+!package.json
+!README.md
