@@ -9,8 +9,8 @@ use std::vec;
 
 use swc_ecma_ast::{
   AssignExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread,
-  JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr, ObjectLit, PatOrExpr, Prop,
-  PropName, PropOrSpread, VarDeclarator,
+  JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr, ObjectLit, PatOrExpr, Prop, PropName,
+  PropOrSpread, VarDeclarator,
 };
 
 use self::swc_common::{sync::Lrc, SourceMap, Span};
@@ -337,6 +337,38 @@ impl Visit for ThrowAnalyzer {
             self.imported_identifier_usages.push(usage_map);
           }
         }
+
+        Expr::Arrow(arrow_expr) => {
+          let mut throw_finder = ThrowFinder {
+            throw_spans: vec![],
+          };
+          throw_finder.visit_arrow_expr(arrow_expr);
+          if !throw_finder.throw_spans.is_empty() {
+            let throw_map = ThrowMap {
+              throw_spans: throw_finder.throw_spans,
+              throw_statement: arrow_expr.span,
+              function_or_method_name: self
+                .function_name_stack
+                .last()
+                .cloned()
+                .unwrap_or_else(|| "<anonymous>".to_string()),
+              class_name: None,
+              id: format!(
+                "{}-{}",
+                self
+                  .current_class_name
+                  .clone()
+                  .unwrap_or_else(|| "NOT_SET".to_string()),
+                self
+                  .function_name_stack
+                  .last()
+                  .cloned()
+                  .unwrap_or_else(|| "<anonymous>".to_string())
+              ),
+            };
+            self.functions_with_throws.insert(throw_map);
+          }
+        }
         _ => {}
       }
     }
@@ -602,8 +634,8 @@ impl Eq for CallToThrowMap {}
 impl Hash for CallToThrowMap {
   fn hash<H: Hasher>(&self, state: &mut H) {
     self.id.hash(state);
-		self.call_span.lo.hash(state);
-		self.call_span.hi.hash(state);
+    self.call_span.lo.hash(state);
+    self.call_span.hi.hash(state);
   }
 }
 
@@ -639,15 +671,15 @@ struct CallFinder {
 /// This module defines structures and implements functionality for identifying and mapping
 /// function calls to their respective functions or methods that throw exceptions. It uses
 /// SWC's visitor pattern to traverse the AST (Abstract Syntax Tree) of JavaScript or TypeScript code.
-/// 
+///
 /// `CallToThrowMap` records the mapping of a function call to a function that throws.
-/// It captures the span of the call, the name of the function/method being called, 
+/// It captures the span of the call, the name of the function/method being called,
 /// the class name if the call is a method call, and the `ThrowMap` that provides details
 /// about the throw statement in the called function/method.
-/// 
+///
 /// `InstantiationsMap` keeps track of class instantiations by recording the class name
 /// and the variable name that holds the instance.
-/// 
+///
 /// `CallFinder` is the core structure that uses the Visitor pattern to traverse the AST nodes.
 /// It maintains state as it goes through the code, keeping track of current class names,
 /// function name stacks, and object property stacks. As it finds function calls, it tries
