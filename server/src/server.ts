@@ -201,9 +201,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         if (!import_analysis) {
           return
         }
-				console.log(analysis.imported_identifiers_diagnostics)
-				console.log(analysis.throw_ids)
-				console.log(import_analysis.throw_ids)
         if (import_analysis.throw_ids.length) {
           import_analysis.throw_ids.forEach((throw_id) => {
             const newDiagnostics = analysis.imported_identifiers_diagnostics.get(throw_id)
