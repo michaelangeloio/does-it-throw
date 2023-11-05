@@ -5,12 +5,13 @@ extern crate swc_ecma_visit;
 
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
+use std::task::Context;
 use std::vec;
 
 use swc_ecma_ast::{
   ArrowExpr, AssignExpr, BlockStmtOrExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl,
   JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr, ObjectLit,
-  PatOrExpr, Prop, PropName, PropOrSpread, Stmt, VarDeclarator,
+  PatOrExpr, Prop, PropName, PropOrSpread, Stmt, VarDeclarator, MethodKind, Constructor,
 };
 
 use self::swc_common::{sync::Lrc, SourceMap, Span};
@@ -252,6 +253,30 @@ impl ThrowAnalyzer {
       self.functions_with_throws.insert(throw_map);
     }
   }
+
+	fn check_constructor_for_throws(&mut self, constructor: &Constructor) {
+		let mut throw_finder = ThrowFinder {
+			throw_spans: vec![],
+		};
+		throw_finder.visit_constructor(constructor);
+		if !throw_finder.throw_spans.is_empty() {
+			let throw_map = ThrowMap {
+				throw_spans: throw_finder.throw_spans,
+				throw_statement: constructor.span,
+				function_or_method_name: self.current_method_name.clone().unwrap_or_else(|| "<constructor>".to_string()),
+				class_name: self.current_class_name.clone(),
+				id: format!(
+					"{}-{}",
+					self
+						.current_class_name
+						.clone()
+						.unwrap_or_else(|| "NOT_SET".to_string()),
+					self.current_method_name.clone().unwrap_or_else(|| "<constructor>".to_string())
+				),
+			};
+			self.functions_with_throws.insert(throw_map);
+		}
+	}
 
   fn register_import(&mut self, import: &ImportDecl) {
     self.import_sources.insert(import.src.value.to_string());
@@ -655,8 +680,21 @@ impl Visit for ThrowAnalyzer {
     swc_ecma_visit::visit_expr(self, expr);
   }
 
+	fn visit_constructor(&mut self, constructor: &Constructor) {
+		self.current_method_name = Some("<constructor>".to_string());
+		self.check_constructor_for_throws(&constructor);
+		if let Some(constructor) = &constructor.body {
+			for stmt in &constructor.stmts {
+				self.visit_stmt(stmt);
+			}
+		}
+		swc_ecma_visit::visit_constructor(self, constructor);
+		self.current_method_name = None;
+	}
+
   fn visit_class_method(&mut self, class_method: &ClassMethod) {
     if let Some(method_name) = &class_method.key.as_ident() {
+
       let method_name = method_name.sym.to_string();
 
       self.function_name_stack.push(method_name.clone());

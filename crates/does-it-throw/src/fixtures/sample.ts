@@ -9,7 +9,9 @@ export function hiKhue() {
 }
 
 export class Something {
-  constructor() {}
+  constructor() {
+		throw new Error('hi khue')
+	}
 
   someMethodThatThrows() {
     throw new Error('hi khue')
