@@ -8,9 +8,9 @@ use std::hash::{Hash, Hasher};
 use std::vec;
 
 use swc_ecma_ast::{
-  AssignExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread,
-  JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr, ObjectLit, PatOrExpr, Prop, PropName,
-  PropOrSpread, VarDeclarator,
+  ArrowExpr, AssignExpr, BlockStmtOrExpr, ClassDecl, ClassMethod, Decl, ExportDecl, FnDecl,
+  JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr, ObjectLit,
+  PatOrExpr, Prop, PropName, PropOrSpread, Stmt, VarDeclarator,
 };
 
 use self::swc_common::{sync::Lrc, SourceMap, Span};
@@ -308,6 +308,22 @@ impl Visit for ThrowAnalyzer {
               self.imported_identifier_usages.push(usage_map);
             }
           }
+          for arg in &call.args {
+            self.function_name_stack.push(
+              self
+                .current_method_name
+                .clone()
+                .unwrap_or_else(|| "<anonymous>".to_string()),
+            );
+            if let Expr::Arrow(arrow_expr) = &*arg.expr {
+              self.check_arrow_function_for_throws(arrow_expr);
+							self.visit_arrow_expr(&arrow_expr)
+            }
+            if let Expr::Fn(fn_expr) = &*arg.expr {
+              self.check_function_for_throws(&fn_expr.function);
+            }
+            self.function_name_stack.pop();
+          }
           self.current_class_name = None;
           self.current_method_name = None;
         }
@@ -335,6 +351,16 @@ impl Visit for ThrowAnalyzer {
               id.clone(),
             );
             self.imported_identifier_usages.push(usage_map);
+          }
+          for arg in &call.args {
+            self.function_name_stack.push(called_function_name.clone());
+            if let Expr::Arrow(arrow_expr) = &*arg.expr {
+              self.check_arrow_function_for_throws(arrow_expr);
+            }
+            if let Expr::Fn(fn_expr) = &*arg.expr {
+              self.check_function_for_throws(&fn_expr.function);
+            }
+            self.function_name_stack.pop();
           }
         }
 
@@ -556,9 +582,55 @@ impl Visit for ThrowAnalyzer {
   }
 
   fn visit_arrow_expr(&mut self, arrow_expr: &swc_ecma_ast::ArrowExpr) {
-    self.check_arrow_function_for_throws(&arrow_expr);
+			match &*arrow_expr.body {
+				BlockStmtOrExpr::BlockStmt(block_stmt) => {
+					for stmt in &block_stmt.stmts {
+						self.visit_stmt(stmt);
+					}
+				}
+				BlockStmtOrExpr::Expr(expr) => {
+					if let Expr::Call(call_expr) = &**expr {
+						self.visit_call_expr(call_expr);
+					} else {
+						// use default implementation for other kinds of expressions (for now)
+						self.visit_expr(expr);
+					}
+				}
+			}
     swc_ecma_visit::visit_arrow_expr(self, arrow_expr);
   }
+
+	fn visit_stmt(&mut self, stmt: &Stmt) {
+    match stmt {
+      Stmt::Expr(expr_stmt) => {
+        self.visit_expr(&expr_stmt.expr);
+      }
+      Stmt::Block(block_stmt) => {
+        for stmt in &block_stmt.stmts {
+          self.visit_stmt(stmt);
+        }
+      }
+      Stmt::If(if_stmt) => {
+        self.visit_expr(&if_stmt.test);
+        self.visit_stmt(&*if_stmt.cons);
+        if let Some(alt) = &if_stmt.alt {
+          self.visit_stmt(alt);
+        }
+      }
+      _ => {
+        // For other kinds of statements, we continue with the default implementation (for now)
+        swc_ecma_visit::visit_stmt(self, stmt);
+      }
+    }
+  }
+
+  fn visit_expr(&mut self, expr: &Expr) {
+    if let Expr::Call(call_expr) = &*expr {
+      self.visit_call_expr(call_expr)
+    }
+		swc_ecma_visit::visit_expr(self, expr);
+	}
+  
 
   fn visit_class_method(&mut self, class_method: &ClassMethod) {
     if let Some(method_name) = &class_method.key.as_ident() {
@@ -775,26 +847,39 @@ impl Visit for CallFinder {
                 } else {
                   "<anonymous>".to_string()
                 };
-
               if throw_map.function_or_method_name == called_method_name {
+                let class_name_or_not_set = self
+                  .current_class_name
+                  .clone()
+                  .or(possible_class_name.clone())
+                  .unwrap_or_else(|| "NOT_SET".to_string());
                 let call_to_throw_map = CallToThrowMap {
                   call_span: call.span,
                   throw_map: throw_map.clone(),
-                  call_class_name: self.current_class_name.clone(),
+                  call_class_name: Some(class_name_or_not_set.clone()),
                   call_function_or_method_name: call_function_or_method_name.clone(),
                   class_name: possible_class_name.clone(),
                   id: format!(
                     "{}-{}",
-                    self
-                      .current_class_name
-                      .clone()
-                      .unwrap_or_else(|| "NOT_SET".to_string()),
+                    class_name_or_not_set,
                     call_function_or_method_name.clone()
                   ),
                 };
                 self.calls.insert(call_to_throw_map);
                 break;
               }
+            }
+            for arg in &call.args {
+              self.function_name_stack.push(method_ident.sym.to_string());
+              self.current_class_name = possible_class_name.clone();
+              if let Expr::Arrow(arrow_expr) = &*arg.expr {
+                self.visit_arrow_expr(arrow_expr);
+              }
+              if let Expr::Fn(fn_expr) = &*arg.expr {
+                self.visit_function(&fn_expr.function);
+              }
+              self.function_name_stack.pop();
+              self.current_class_name = None;
             }
           }
         }
@@ -810,16 +895,17 @@ impl Visit for CallFinder {
               called_function_name
             );
             if throw_map.id == potential_throw_id {
+              let call_function_or_method_name = self
+                .function_name_stack
+                .last()
+                .cloned()
+                .unwrap_or_else(|| "<anonymous>".to_string());
               // The function being called is known to throw
               let call_to_throw_map = CallToThrowMap {
                 call_span: call.span,
                 throw_map: throw_map.clone(),
                 call_class_name: self.current_class_name.clone(),
-                call_function_or_method_name: self
-                  .function_name_stack
-                  .last()
-                  .cloned()
-                  .unwrap_or_else(|| "<anonymous>".to_string()),
+                call_function_or_method_name: call_function_or_method_name.clone(),
                 class_name: None,
                 id: format!(
                   "{}-{}",
@@ -827,16 +913,22 @@ impl Visit for CallFinder {
                     .current_class_name
                     .clone()
                     .unwrap_or_else(|| "NOT_SET".to_string()),
-                  self
-                    .function_name_stack
-                    .last()
-                    .cloned()
-                    .unwrap_or_else(|| "<anonymous>".to_string())
+                  call_function_or_method_name
                 ),
               };
               self.calls.insert(call_to_throw_map);
               break;
             }
+          }
+          for arg in &call.args {
+            self.function_name_stack.push(called_function_name.clone());
+            if let Expr::Arrow(arrow_expr) = &*arg.expr {
+              self.visit_arrow_expr(arrow_expr);
+            }
+            if let Expr::Fn(fn_expr) = &*arg.expr {
+              self.visit_function(&fn_expr.function);
+            }
+            self.function_name_stack.pop();
           }
         }
         _ => {}
@@ -881,5 +973,61 @@ impl Visit for CallFinder {
       }
     }
     swc_ecma_visit::visit_var_declarator(self, var_declarator);
+  }
+
+  fn visit_arrow_expr(&mut self, arrow_expr: &ArrowExpr) {
+    match &*arrow_expr.body {
+      BlockStmtOrExpr::BlockStmt(block_stmt) => {
+        for stmt in &block_stmt.stmts {
+          self.visit_stmt(stmt);
+        }
+      }
+      BlockStmtOrExpr::Expr(expr) => {
+        if let Expr::Call(call_expr) = &**expr {
+          self.visit_call_expr(call_expr);
+        } else {
+          // use default implementation for other kinds of expressions (for now)
+          self.visit_expr(expr);
+        }
+      }
+    }
+  }
+
+  fn visit_function(&mut self, function: &Function) {
+    if let Some(block_stmt) = &function.body {
+      for stmt in &block_stmt.stmts {
+        self.visit_stmt(stmt);
+      }
+    }
+  }
+
+  fn visit_stmt(&mut self, stmt: &Stmt) {
+    match stmt {
+      Stmt::Expr(expr_stmt) => {
+        self.visit_expr(&expr_stmt.expr);
+      }
+      Stmt::Block(block_stmt) => {
+        for stmt in &block_stmt.stmts {
+          self.visit_stmt(stmt);
+        }
+      }
+      Stmt::If(if_stmt) => {
+        self.visit_expr(&if_stmt.test);
+        self.visit_stmt(&*if_stmt.cons);
+        if let Some(alt) = &if_stmt.alt {
+          self.visit_stmt(alt);
+        }
+      }
+      _ => {
+        // For other kinds of statements, we continue with the default implementation (for now)
+        swc_ecma_visit::visit_stmt(self, stmt);
+      }
+    }
+  }
+
+  fn visit_expr(&mut self, expr: &Expr) {
+    if let Expr::Call(call_expr) = &*expr {
+      self.visit_call_expr(call_expr)
+    }
   }
 }

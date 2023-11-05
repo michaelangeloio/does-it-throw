@@ -205,7 +205,11 @@ pub fn add_diagnostics_for_calls_to_throws(
 	for call in &calls_to_throws {
 		let call_start = cm.lookup_char_pos(call.call_span.lo());
 
-		let call_end = cm.lookup_char_pos(call.call_span.hi());
+		let line_end_byte_pos =
+		get_line_end_byte_pos(&cm, call.call_span.lo(), call.call_span.hi());
+
+		let call_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
+
 
 		if debug == Some(true) {
 			log(&format!(

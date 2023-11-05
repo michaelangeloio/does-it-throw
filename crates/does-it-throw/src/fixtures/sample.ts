@@ -1,7 +1,6 @@
 //@ts-nocheck
 import { testing as Test } from './something'
 
-import { SomeObject } from './something123'
 
 console.log('\x1b[36m%s\x1b[0m', Test)
 
@@ -29,6 +28,12 @@ export class Something {
     }
   }
 
+	someMethodThatThrows3() {
+		if (something) {
+			throw new Error('hi khue')
+		}
+	}
+
   nestedThrow() {
     if (somethingRandom) {
       return true
@@ -46,9 +51,9 @@ export class Something {
     this.nestedThrow()
   }
 
-  callImportedThrow() {
-    SomeObject.someImportedThrow()
-  }
+  // callImportedThrow() {
+  //   SomeObject.someImportedThrow()
+  // }
 }
 
 export function somethingElse() {
@@ -97,5 +102,19 @@ connection.onInitialized(() => {
       connection.console.log(`Workspace folder change event received. ${JSON.stringify(_event)}`)
     })
   }
-  throw new Error('')
+	// someConstThatThrows()
+	// const something = new Something()
+	// something.someMethodThatThrows3()
+	// SomeObject.someImportedThrow()
+	throw new Error('hi khue')
+})
+
+
+someRandomCall(() => {
+	// hiKhue()
+	if (something) {
+		throw new Error('hi khue')
+	}
+	const something = new Something()
+	something.someMethodThatThrows()
 })

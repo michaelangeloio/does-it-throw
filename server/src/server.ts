@@ -149,7 +149,7 @@ const findFirstFileThatExists = async (uri: string, relative_import: string) => 
   } else {
     files = [`${baseUri}.js`, `${baseUri}.jsx`, `${baseUri}.ts`, `${baseUri}.tsx`]
   }
-  return Promise.race(files.map(_checkAccessOnFile))
+  return Promise.any(files.map(_checkAccessOnFile))
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
