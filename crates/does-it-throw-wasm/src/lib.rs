@@ -210,7 +210,6 @@ pub fn add_diagnostics_for_calls_to_throws(
 
 		let call_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
-
 		if debug == Some(true) {
 			log(&format!(
 				"Function call that may throw: {}",
@@ -247,7 +246,7 @@ pub fn add_diagnostics_for_calls_to_throws(
 // Multiple calls to the same identifier can result in multiple diagnostics for the same identifier.
 // We want to return a diagnostic for all calls to the same identifier, so we need to combine the diagnostics for each identifier.
 pub fn identifier_usages_vec_to_combined_map(
-  identifier_usages: Vec<IdentifierUsage>,
+  identifier_usages: HashSet<IdentifierUsage>,
   cm: &SourceMap,
 	debug: Option<bool>,
 ) -> HashMap<String, ImportedIdentifiers> {

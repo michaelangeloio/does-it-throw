@@ -47,7 +47,7 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
     function_name_stack: vec![],
     current_class_name: None,
     current_method_name: None,
-    imported_identifier_usages: vec![],
+    imported_identifier_usages: HashSet::new(),
   };
   collector.visit_module(&module);
   let mut call_collector = CallFinder {
@@ -86,7 +86,7 @@ impl Visit for ThrowFinder {
   }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone)]
 pub struct IdentifierUsage {
   pub usage_span: Span,
   pub identifier_name: String,
@@ -105,6 +105,22 @@ impl IdentifierUsage {
   }
 }
 
+impl Eq for IdentifierUsage {}
+
+impl PartialEq for IdentifierUsage {
+  fn eq(&self, other: &Self) -> bool {
+    self.id == other.id
+  }
+}
+
+impl Hash for IdentifierUsage {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    self.id.hash(state);
+    self.usage_span.lo.hash(state);
+    self.usage_span.hi.hash(state);
+  }
+}
+
 #[derive(Default)]
 pub struct AnalysisResult {
   pub functions_with_throws: HashSet<ThrowMap>,
@@ -113,7 +129,7 @@ pub struct AnalysisResult {
   pub fs_access_calls: Vec<String>,
   pub import_sources: HashSet<String>,
   pub imported_identifiers: Vec<String>,
-  pub imported_identifier_usages: Vec<IdentifierUsage>,
+  pub imported_identifier_usages: HashSet<IdentifierUsage>,
 }
 
 struct CombinedAnalyzers {
@@ -169,7 +185,7 @@ struct ThrowAnalyzer {
   function_name_stack: Vec<String>,
   current_class_name: Option<String>,
   current_method_name: Option<String>,
-  imported_identifier_usages: Vec<IdentifierUsage>,
+  imported_identifier_usages: HashSet<IdentifierUsage>,
 }
 
 impl ThrowAnalyzer {
@@ -305,7 +321,7 @@ impl Visit for ThrowAnalyzer {
                 usage_context.clone(),
                 id.clone(),
               );
-              self.imported_identifier_usages.push(usage_map);
+              self.imported_identifier_usages.insert(usage_map);
             }
           }
           for arg in &call.args {
@@ -317,10 +333,11 @@ impl Visit for ThrowAnalyzer {
             );
             if let Expr::Arrow(arrow_expr) = &*arg.expr {
               self.check_arrow_function_for_throws(arrow_expr);
-							self.visit_arrow_expr(&arrow_expr)
+              self.visit_arrow_expr(&arrow_expr)
             }
             if let Expr::Fn(fn_expr) = &*arg.expr {
               self.check_function_for_throws(&fn_expr.function);
+              self.visit_function(&fn_expr.function)
             }
             self.function_name_stack.pop();
           }
@@ -350,15 +367,17 @@ impl Visit for ThrowAnalyzer {
               usage_context.clone(),
               id.clone(),
             );
-            self.imported_identifier_usages.push(usage_map);
+            self.imported_identifier_usages.insert(usage_map);
           }
           for arg in &call.args {
             self.function_name_stack.push(called_function_name.clone());
             if let Expr::Arrow(arrow_expr) = &*arg.expr {
               self.check_arrow_function_for_throws(arrow_expr);
+              self.visit_arrow_expr(&arrow_expr);
             }
             if let Expr::Fn(fn_expr) = &*arg.expr {
               self.check_function_for_throws(&fn_expr.function);
+              self.visit_function(&fn_expr.function);
             }
             self.function_name_stack.pop();
           }
@@ -577,30 +596,35 @@ impl Visit for ThrowAnalyzer {
   }
 
   fn visit_function(&mut self, function: &Function) {
+    if let Some(block_stmt) = &function.body {
+      for stmt in &block_stmt.stmts {
+        self.visit_stmt(stmt);
+      }
+    }
     self.check_function_for_throws(function);
     swc_ecma_visit::visit_function(self, function);
   }
 
   fn visit_arrow_expr(&mut self, arrow_expr: &swc_ecma_ast::ArrowExpr) {
-			match &*arrow_expr.body {
-				BlockStmtOrExpr::BlockStmt(block_stmt) => {
-					for stmt in &block_stmt.stmts {
-						self.visit_stmt(stmt);
-					}
-				}
-				BlockStmtOrExpr::Expr(expr) => {
-					if let Expr::Call(call_expr) = &**expr {
-						self.visit_call_expr(call_expr);
-					} else {
-						// use default implementation for other kinds of expressions (for now)
-						self.visit_expr(expr);
-					}
-				}
-			}
+    match &*arrow_expr.body {
+      BlockStmtOrExpr::BlockStmt(block_stmt) => {
+        for stmt in &block_stmt.stmts {
+          self.visit_stmt(stmt);
+        }
+      }
+      BlockStmtOrExpr::Expr(expr) => {
+        if let Expr::Call(call_expr) = &**expr {
+          self.visit_call_expr(call_expr);
+        } else {
+          // use default implementation for other kinds of expressions (for now)
+          self.visit_expr(expr);
+        }
+      }
+    }
     swc_ecma_visit::visit_arrow_expr(self, arrow_expr);
   }
 
-	fn visit_stmt(&mut self, stmt: &Stmt) {
+  fn visit_stmt(&mut self, stmt: &Stmt) {
     match stmt {
       Stmt::Expr(expr_stmt) => {
         self.visit_expr(&expr_stmt.expr);
@@ -628,9 +652,8 @@ impl Visit for ThrowAnalyzer {
     if let Expr::Call(call_expr) = &*expr {
       self.visit_call_expr(call_expr)
     }
-		swc_ecma_visit::visit_expr(self, expr);
-	}
-  
+    swc_ecma_visit::visit_expr(self, expr);
+  }
 
   fn visit_class_method(&mut self, class_method: &ClassMethod) {
     if let Some(method_name) = &class_method.key.as_ident() {
@@ -740,24 +763,24 @@ struct CallFinder {
 }
 
 // ----- CallFinder Visitor implementation -----
-/// This module defines structures and implements functionality for identifying and mapping
-/// function calls to their respective functions or methods that throw exceptions. It uses
-/// SWC's visitor pattern to traverse the AST (Abstract Syntax Tree) of JavaScript or TypeScript code.
+// This module defines structures and implements functionality for identifying and mapping
+// function calls to their respective functions or methods that throw exceptions. It uses
+// SWC's visitor pattern to traverse the AST (Abstract Syntax Tree) of JavaScript or TypeScript code.
 ///
-/// `CallToThrowMap` records the mapping of a function call to a function that throws.
-/// It captures the span of the call, the name of the function/method being called,
-/// the class name if the call is a method call, and the `ThrowMap` that provides details
-/// about the throw statement in the called function/method.
+// `CallToThrowMap` records the mapping of a function call to a function that throws.
+// It captures the span of the call, the name of the function/method being called,
+// the class name if the call is a method call, and the `ThrowMap` that provides details
+// about the throw statement in the called function/method.
 ///
-/// `InstantiationsMap` keeps track of class instantiations by recording the class name
-/// and the variable name that holds the instance.
+// `InstantiationsMap` keeps track of class instantiations by recording the class name
+// and the variable name that holds the instance.
 ///
-/// `CallFinder` is the core structure that uses the Visitor pattern to traverse the AST nodes.
-/// It maintains state as it goes through the code, keeping track of current class names,
-/// function name stacks, and object property stacks. As it finds function calls, it tries
-/// to match them with known functions or methods that throw exceptions using the data
-/// accumulated in `functions_with_throws`. When a match is found, it records the mapping
-/// in `calls`. It also tracks instantiations of classes to help resolve method calls.
+// `CallFinder` is the core structure that uses the Visitor pattern to traverse the AST nodes.
+// It maintains state as it goes through the code, keeping track of current class names,
+// function name stacks, and object property stacks. As it finds function calls, it tries
+// to match them with known functions or methods that throw exceptions using the data
+// accumulated in `functions_with_throws`. When a match is found, it records the mapping
+// in `calls`. It also tracks instantiations of classes to help resolve method calls.
 
 impl Visit for CallFinder {
   fn visit_class_decl(&mut self, class_decl: &ClassDecl) {
