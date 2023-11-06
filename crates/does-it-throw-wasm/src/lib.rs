@@ -13,7 +13,7 @@ use self::swc_common::{sync::Lrc, SourceMap, SourceMapper, Span};
 use swc_common::BytePos;
 use wasm_bindgen::prelude::*;
 
-use does_it_throw::{analyze_code, AnalysisResult, IdentifierUsage, ThrowMap, CallToThrowMap};
+use does_it_throw::{analyze_code, AnalysisResult, CallToThrowMap, IdentifierUsage, ThrowMap};
 
 // Define an extern block with the `console.log` function.
 #[wasm_bindgen]
@@ -123,132 +123,121 @@ pub struct ImportedIdentifiers {
   pub id: String,
 }
 
-
 pub fn add_diagnostics_for_functions_that_throw(
-	diagnostics: &mut Vec<Diagnostic>,
-	functions_with_throws: HashSet<ThrowMap>,
-	cm: &SourceMap,
-	debug: Option<bool>,
+  diagnostics: &mut Vec<Diagnostic>,
+  functions_with_throws: HashSet<ThrowMap>,
+  cm: &SourceMap,
+  debug: Option<bool>,
 ) {
-	for fun in &functions_with_throws {
-		let function_start = cm.lookup_char_pos(fun.throw_statement.lo());
-		let line_end_byte_pos =
-			get_line_end_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
+  for fun in &functions_with_throws {
+    let function_start = cm.lookup_char_pos(fun.throw_statement.lo());
+    let line_end_byte_pos =
+      get_line_end_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
 
-		let function_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
+    let function_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
-		let start_character_byte_pos =
-			get_line_start_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
-		let start_character = cm.lookup_char_pos(start_character_byte_pos);
+    let start_character_byte_pos =
+      get_line_start_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
+    let start_character = cm.lookup_char_pos(start_character_byte_pos);
 
-		if debug == Some(true) {
-			log(&format!(
-				"Function throws: {}",
-				fun.function_or_method_name
-			));
-			log(&format!(
-				"From line {} column {} to line {} column {}",
-				function_start.line,
-				function_start.col_display,
-				function_end.line,
-				function_end.col_display
-			));
-		}
+    if debug == Some(true) {
+      log(&format!("Function throws: {}", fun.function_or_method_name));
+      log(&format!(
+        "From line {} column {} to line {} column {}",
+        function_start.line,
+        function_start.col_display,
+        function_end.line,
+        function_end.col_display
+      ));
+    }
 
-		diagnostics.push(Diagnostic {
-			severity: DiagnosticSeverity::Hint.to_int(),
-			range: DiagnosticRange {
-				start: DiagnosticPosition {
-					line: function_start.line - 1,
-					character: start_character.col_display,
-				},
-				end: DiagnosticPosition {
-					line: function_end.line - 1,
-					character: function_end.col_display,
-				},
-			},
-			message: "Function that may throw.".to_string(),
-			source: "Does it Throw?".to_string(),
-		});
+    diagnostics.push(Diagnostic {
+      severity: DiagnosticSeverity::Hint.to_int(),
+      range: DiagnosticRange {
+        start: DiagnosticPosition {
+          line: function_start.line - 1,
+          character: start_character.col_display,
+        },
+        end: DiagnosticPosition {
+          line: function_end.line - 1,
+          character: function_end.col_display,
+        },
+      },
+      message: "Function that may throw.".to_string(),
+      source: "Does it Throw?".to_string(),
+    });
 
-		for span in &fun.throw_spans {
-			let start = cm.lookup_char_pos(span.lo());
-			let end = cm.lookup_char_pos(span.hi());
+    for span in &fun.throw_spans {
+      let start = cm.lookup_char_pos(span.lo());
+      let end = cm.lookup_char_pos(span.hi());
 
-			diagnostics.push(Diagnostic {
-				severity: DiagnosticSeverity::Information.to_int(),
-				range: DiagnosticRange {
-					start: DiagnosticPosition {
-						line: start.line - 1,
-						character: start.col_display,
-					},
-					end: DiagnosticPosition {
-						line: end.line - 1,
-						character: end.col_display,
-					},
-				},
-				message: "Throw statement.".to_string(),
-				source: "Does it Throw?".to_string(),
-			});
-		}
-	}
+      diagnostics.push(Diagnostic {
+        severity: DiagnosticSeverity::Information.to_int(),
+        range: DiagnosticRange {
+          start: DiagnosticPosition {
+            line: start.line - 1,
+            character: start.col_display,
+          },
+          end: DiagnosticPosition {
+            line: end.line - 1,
+            character: end.col_display,
+          },
+        },
+        message: "Throw statement.".to_string(),
+        source: "Does it Throw?".to_string(),
+      });
+    }
+  }
 }
-
-
 
 pub fn add_diagnostics_for_calls_to_throws(
-	diagnostics: &mut Vec<Diagnostic>,
-	calls_to_throws: HashSet<CallToThrowMap>,
-	cm: &SourceMap,
-	debug: Option<bool>,
+  diagnostics: &mut Vec<Diagnostic>,
+  calls_to_throws: HashSet<CallToThrowMap>,
+  cm: &SourceMap,
+  debug: Option<bool>,
 ) {
-	for call in &calls_to_throws {
-		let call_start = cm.lookup_char_pos(call.call_span.lo());
+  for call in &calls_to_throws {
+    let call_start = cm.lookup_char_pos(call.call_span.lo());
 
-		let line_end_byte_pos =
-		get_line_end_byte_pos(&cm, call.call_span.lo(), call.call_span.hi());
+    let line_end_byte_pos = get_line_end_byte_pos(&cm, call.call_span.lo(), call.call_span.hi());
 
-		let call_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
+    let call_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
-		if debug == Some(true) {
-			log(&format!(
-				"Function call that may throw: {}",
-				call.call_function_or_method_name
-			));
-			log(&format!(
-				"From line {} column {} to line {} column {}",
-				call_start.line,
-				call_start.col_display,
-				call_end.line,
-				call_end.col_display
-			));
-		}
+    if debug == Some(true) {
+      log(&format!(
+        "Function call that may throw: {}",
+        call.call_function_or_method_name
+      ));
+      log(&format!(
+        "From line {} column {} to line {} column {}",
+        call_start.line, call_start.col_display, call_end.line, call_end.col_display
+      ));
+    }
 
-		diagnostics.push(Diagnostic {
-			severity: DiagnosticSeverity::Hint.to_int(),
-			range: DiagnosticRange {
-				start: DiagnosticPosition {
-					line: call_start.line - 1,
-					character: call_start.col_display,
-				},
-				end: DiagnosticPosition {
-					line: call_end.line - 1,
-					character: call_end.col_display,
-				},
-			},
-			message: "Function call that may throw.".to_string(),
-			source: "Does it Throw?".to_string(),
-		});
-	}
+    diagnostics.push(Diagnostic {
+      severity: DiagnosticSeverity::Hint.to_int(),
+      range: DiagnosticRange {
+        start: DiagnosticPosition {
+          line: call_start.line - 1,
+          character: call_start.col_display,
+        },
+        end: DiagnosticPosition {
+          line: call_end.line - 1,
+          character: call_end.col_display,
+        },
+      },
+      message: "Function call that may throw.".to_string(),
+      source: "Does it Throw?".to_string(),
+    });
+  }
 }
-
 
 // Multiple calls to the same identifier can result in multiple diagnostics for the same identifier.
 // We want to return a diagnostic for all calls to the same identifier, so we need to combine the diagnostics for each identifier.
 pub fn identifier_usages_vec_to_combined_map(
   identifier_usages: HashSet<IdentifierUsage>,
   cm: &SourceMap,
-	debug: Option<bool>,
+  debug: Option<bool>,
 ) -> HashMap<String, ImportedIdentifiers> {
   let mut identifier_usages_map: HashMap<String, ImportedIdentifiers> = HashMap::new();
   for identifier_usage in identifier_usages {
@@ -256,27 +245,24 @@ pub fn identifier_usages_vec_to_combined_map(
     let start = cm.lookup_char_pos(identifier_usage.usage_span.lo());
     let end = cm.lookup_char_pos(identifier_usage.usage_span.hi());
 
-		if debug == Some(true) {
-			log(&format!(
-				"Identifier usage: {}",
-				identifier_usage.id.clone()
-			));
-			log(&format!(
-				"From line {} column {} to line {} column {}",
-				start.line,
-				start.col_display,
-				end.line,
-				end.col_display
-			));
-		}
+    if debug == Some(true) {
+      log(&format!(
+        "Identifier usage: {}",
+        identifier_usage.id.clone()
+      ));
+      log(&format!(
+        "From line {} column {} to line {} column {}",
+        start.line, start.col_display, end.line, end.col_display
+      ));
+    }
 
-		let identifier_diagnostics =
-		identifier_usages_map
-			.entry(identifier_name)
-			.or_insert(ImportedIdentifiers {
-				diagnostics: Vec::new(),
-				id: identifier_usage.id,
-			});
+    let identifier_diagnostics =
+      identifier_usages_map
+        .entry(identifier_name)
+        .or_insert(ImportedIdentifiers {
+          diagnostics: Vec::new(),
+          id: identifier_usage.id,
+        });
 
     identifier_diagnostics.diagnostics.push(Diagnostic {
       severity: DiagnosticSeverity::Information.to_int(),
@@ -306,14 +292,15 @@ pub struct ParseResult {
 }
 
 impl ParseResult {
-  pub fn into(	
-    results: AnalysisResult,
-    cm: &SourceMap,
-		debug: Option<bool>,
-  ) -> ParseResult {
-		let mut diagnostics: Vec<Diagnostic> = Vec::new();
-		add_diagnostics_for_functions_that_throw(&mut diagnostics, results.functions_with_throws.clone(), &cm, debug);
-		add_diagnostics_for_calls_to_throws(&mut diagnostics, results.calls_to_throws, &cm, debug);
+  pub fn into(results: AnalysisResult, cm: &SourceMap, debug: Option<bool>) -> ParseResult {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    add_diagnostics_for_functions_that_throw(
+      &mut diagnostics,
+      results.functions_with_throws.clone(),
+      &cm,
+      debug,
+    );
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, results.calls_to_throws, &cm, debug);
 
     ParseResult {
       diagnostics,
@@ -326,7 +313,7 @@ impl ParseResult {
       imported_identifiers_diagnostics: identifier_usages_vec_to_combined_map(
         results.imported_identifier_usages,
         &cm,
-				debug,
+        debug,
       ),
     }
   }
@@ -385,7 +372,7 @@ pub struct InputData {
   file_content: String,
   typescript_settings: Option<TypeScriptSettings>,
   ids_to_check: Vec<String>,
-	debug: Option<bool>,
+  debug: Option<bool>,
 }
 
 #[wasm_bindgen]
@@ -397,8 +384,54 @@ pub fn parse_js(data: JsValue) -> JsValue {
 
   let (results, cm) = analyze_code(&input_data.file_content, cm);
 
-  let parse_result = ParseResult::into( results, &cm, input_data.debug);
+  let parse_result = ParseResult::into(results, &cm, input_data.debug);
 
   // Convert the diagnostics to a JsValue and return it.
   serde_wasm_bindgen::to_value(&parse_result).unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+
+  use super::*;
+  use swc_common::FileName;
+
+  #[test]
+  fn test_get_line_end_byte_pos_with_newline() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "line 1\nline 2".into(),
+    );
+
+    let lo_byte_pos = source_file.start_pos;
+    let hi_byte_pos = BytePos(source_file.end_pos.0 + 10);
+
+    let result = get_line_end_byte_pos(&cm, lo_byte_pos, hi_byte_pos);
+    assert_eq!(result, BytePos(24));
+  }
+
+  #[test]
+  fn test_get_line_end_byte_pos_without_newline() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(FileName::Custom("test_file".into()), "no newline".into());
+
+    let lo_byte_pos = source_file.start_pos;
+    let hi_byte_pos = BytePos(source_file.end_pos.0 + 10);
+
+    let result = get_line_end_byte_pos(&cm, lo_byte_pos, hi_byte_pos);
+    assert_eq!(result, hi_byte_pos);
+  }
+
+  #[test]
+  fn test_get_line_end_byte_pos_none_snippet() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(FileName::Custom("test_file".into()), "".into());
+
+    let lo_byte_pos = source_file.start_pos;
+    let hi_byte_pos = BytePos(source_file.end_pos.0 + 10);
+
+    let result = get_line_end_byte_pos(&cm, lo_byte_pos, hi_byte_pos);
+    assert_eq!(result, hi_byte_pos);
+  }
 }
