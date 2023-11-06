@@ -2,6 +2,12 @@
 edition = "2021"
 name = "does-it-throw-wasm"
 version = "0.1.0"
+description = "LSP server wasm binding for does-it-throw"
+license = "MIT"
+documentation = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
+repository = "https://github.com/michaelangeloio/does-it-throw"
+homepage = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
+
 
 [lib]
 crate-type = ["cdylib"]
