@@ -434,4 +434,328 @@ mod tests {
     let result = get_line_end_byte_pos(&cm, lo_byte_pos, hi_byte_pos);
     assert_eq!(result, hi_byte_pos);
   }
+
+  #[test]
+  fn test_get_line_start_byte_pos_with_content() {
+    let cm = Lrc::new(SourceMap::default());
+    cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "line 1\n    line 2\nline 3".into(),
+    );
+
+    let lo_byte_pos = BytePos(19);
+    let hi_byte_pos = BytePos(7);
+
+    let result = get_line_start_byte_pos(&cm, lo_byte_pos, hi_byte_pos);
+    assert_eq!(result, BytePos(1));
+  }
+
+  #[test]
+  fn test_get_line_start_byte_pos_without_content() {
+    let cm = Lrc::new(SourceMap::default());
+    cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "line 1\n    \nline 3".into(),
+    );
+
+    let lo_byte_pos = BytePos(1);
+    let hi_byte_pos = BytePos(11);
+
+    let result = get_line_start_byte_pos(&cm, lo_byte_pos, hi_byte_pos);
+    assert_eq!(result, BytePos(8));
+  }
+
+  #[test]
+  fn test_get_line_start_byte_pos_at_file_start() {
+    let cm = Lrc::new(SourceMap::default());
+    cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "line 1\nline 2\nline 3".into(),
+    );
+
+    let lo_byte_pos = BytePos(0);
+    let hi_byte_pos = BytePos(5);
+
+    let result = get_line_start_byte_pos(&cm, lo_byte_pos, hi_byte_pos);
+    assert_eq!(result, BytePos(0));
+  }
+
+  #[test]
+  fn test_get_relative_imports() {
+    let import_sources = vec![
+      "./relative/path".to_string(),
+      "../relative/path".to_string(),
+      "/absolute/path".to_string(),
+      "http://example.com".to_string(),
+      "https://example.com".to_string(),
+      "package".to_string(),
+    ];
+
+    let expected_relative_imports = vec![
+      "./relative/path".to_string(),
+      "../relative/path".to_string(),
+    ];
+
+    let relative_imports = get_relative_imports(import_sources);
+    assert_eq!(relative_imports, expected_relative_imports);
+  }
+
+  #[test]
+  fn test_add_diagnostics_for_functions_that_throw_single() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "function foo() {\n  throw new Error();\n}".into(),
+    );
+
+    let throw_span = Span::new(
+      source_file.start_pos + BytePos(13),
+      source_file.start_pos + BytePos(30),
+      Default::default(),
+    );
+
+    let functions_with_throws = HashSet::from([ThrowMap {
+      throw_statement: throw_span,
+      throw_spans: vec![throw_span],
+      function_or_method_name: "foo".to_string(),
+      class_name: None,
+      id: "foo".to_string(),
+    }]);
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None);
+
+    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
+    assert_eq!(diagnostics[0].message, "Function that may throw.");
+  }
+
+  #[test]
+  fn test_add_diagnostics_for_functions_that_throw_multiple() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "function foo() {\n  throw new Error('First');\n  throw new Error('Second');\n}".into(),
+    );
+
+    let first_throw_span = Span::new(
+      source_file.start_pos + BytePos(13),
+      source_file.start_pos + BytePos(35),
+      Default::default(),
+    );
+
+    let second_throw_span = Span::new(
+      source_file.start_pos + BytePos(39),
+      source_file.start_pos + BytePos(62),
+      Default::default(),
+    );
+
+    let functions_with_throws = HashSet::from([ThrowMap {
+      throw_statement: first_throw_span,
+      throw_spans: vec![first_throw_span, second_throw_span],
+      function_or_method_name: "foo".to_string(),
+      class_name: None,
+      id: "foo".to_string(),
+    }]);
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None);
+
+    assert_eq!(diagnostics.len(), 3);
+
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
+    assert_eq!(diagnostics[0].message, "Function that may throw.");
+
+    assert_eq!(
+      diagnostics[1].severity,
+      DiagnosticSeverity::Information.to_int()
+    );
+    assert_eq!(diagnostics[1].message, "Throw statement.");
+
+    assert_eq!(
+      diagnostics[2].severity,
+      DiagnosticSeverity::Information.to_int()
+    );
+    assert_eq!(diagnostics[2].message, "Throw statement.");
+  }
+
+  #[test]
+  fn test_add_diagnostics_for_calls_to_throws() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "function foo() {\n  throw new Error();\n}".into(),
+    );
+
+    let call_span = Span::new(
+      source_file.start_pos + BytePos(13),
+      source_file.start_pos + BytePos(30),
+      Default::default(),
+    );
+
+    let call_to_throws = HashSet::from([CallToThrowMap {
+      call_span,
+      call_function_or_method_name: "foo".to_string(),
+      call_class_name: None,
+      class_name: None,
+      id: "foo".to_string(),
+      throw_map: ThrowMap {
+        throw_statement: Span::new(
+          source_file.start_pos + BytePos(13),
+          source_file.start_pos + BytePos(30),
+          Default::default(),
+        ),
+        throw_spans: vec![],
+        function_or_method_name: "foo".to_string(),
+        class_name: None,
+        id: "foo".to_string(),
+      },
+    }]);
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None);
+
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
+    assert_eq!(diagnostics[0].message, "Function call that may throw.");
+    assert_eq!(diagnostics[0].range.start.line, 0);
+    assert_eq!(diagnostics[0].range.start.character, 13);
+    assert_eq!(diagnostics[0].range.end.line, 0);
+    assert_eq!(diagnostics[0].range.end.character, 15);
+  }
+  #[test]
+  fn test_no_calls_to_throws() {
+    let cm = Lrc::new(SourceMap::default());
+    cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "function foo() {\n  console.log('No throw');\n}".into(),
+    );
+
+    let call_to_throws = HashSet::new();
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None);
+
+    assert!(diagnostics.is_empty());
+  }
+
+  #[test]
+  fn test_multiple_calls_to_throws() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "function foo() {\n  throw new Error();\n}\nfunction bar() {\n  throw new Error();\n}".into(),
+    );
+
+    let call_span_foo = Span::new(
+      source_file.start_pos + BytePos(13),
+      source_file.start_pos + BytePos(30),
+      Default::default(),
+    );
+
+    let call_span_bar = Span::new(
+      source_file.start_pos + BytePos(52),
+      source_file.start_pos + BytePos(69),
+      Default::default(),
+    );
+
+    let call_to_throws = HashSet::from([
+      CallToThrowMap {
+        call_span: call_span_foo,
+        call_function_or_method_name: "foo".to_string(),
+        call_class_name: None,
+        class_name: None,
+        id: "foo".to_string(),
+        throw_map: ThrowMap {
+          throw_statement: Span::new(
+            source_file.start_pos + BytePos(13),
+            source_file.start_pos + BytePos(30),
+            Default::default(),
+          ),
+          throw_spans: vec![],
+          function_or_method_name: "foo".to_string(),
+          class_name: None,
+          id: "foo".to_string(),
+        },
+      },
+      CallToThrowMap {
+        call_span: call_span_bar,
+        call_function_or_method_name: "bar".to_string(),
+        call_class_name: None,
+        class_name: None,
+        id: "foo".to_string(),
+        throw_map: ThrowMap {
+          throw_statement: Span::new(
+            source_file.start_pos + BytePos(13),
+            source_file.start_pos + BytePos(30),
+            Default::default(),
+          ),
+          throw_spans: vec![],
+          function_or_method_name: "foo".to_string(),
+          class_name: None,
+          id: "foo".to_string(),
+        },
+      },
+    ]);
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None);
+
+    assert_eq!(diagnostics.len(), 2);
+  }
+
+	#[test]
+	fn test_identifier_usages_vec_to_combined_map_multiple_usages_same_identifier() {
+			let cm = Lrc::new(SourceMap::default());
+			let source_file = cm.new_source_file(
+					FileName::Custom("test_file".into()),
+					"import {foo} from 'module'; foo(); foo();".into(),
+			);
+
+			let first_usage_span = Span::new(
+					source_file.start_pos + BytePos(17),
+					source_file.start_pos + BytePos(20),
+					Default::default(),
+			);
+
+			let second_usage_span = Span::new(
+					source_file.start_pos + BytePos(22),
+					source_file.start_pos + BytePos(25),
+					Default::default(),
+			);
+
+			let identifier_usages = HashSet::from([
+					IdentifierUsage {
+							id: "foo".to_string(),
+							usage_span: first_usage_span,
+							identifier_name: "foo".to_string(),
+							usage_context: "import".to_string(),
+					},
+					IdentifierUsage {
+							id: "foo".to_string(),
+							usage_span: second_usage_span,
+							identifier_name: "foo".to_string(),
+							usage_context: "import".to_string(),
+					},
+			]);
+
+			let combined_map = identifier_usages_vec_to_combined_map(identifier_usages, &cm, None);
+			
+			assert_eq!(combined_map.len(), 1);
+
+			let foo_diagnostics = &combined_map.get("foo").unwrap().diagnostics;
+			assert_eq!(foo_diagnostics.len(), 2);
+
+			assert_eq!(foo_diagnostics[0].severity, DiagnosticSeverity::Information.to_int());
+			assert_eq!(foo_diagnostics[0].message, "Function imported that may throw.");
+			
+			assert_eq!(foo_diagnostics[1].severity, DiagnosticSeverity::Information.to_int());
+			assert_eq!(foo_diagnostics[1].message, "Function imported that may throw.");
+			
+	}
 }
