@@ -5,6 +5,10 @@
 	"repository": {
 		"url": "https://github.com/michaelangeloio/does-it-throw"
 	},
+	"author": {
+		"name": "Michael Angelo",
+		"email": "email@michaelangelo.io"
+	},
 	"licenses": [
 		{
 			"type": "MIT",
