@@ -454,4 +454,160 @@ mod integration_tests {
     .iter()
     .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
   }
+
+  #[test]
+  fn test_tsx() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/tsx.tsx", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let cm: Lrc<SourceMap> = Default::default();
+
+    let (result, _cm) = analyze_code(&sample_code, cm);
+
+    // general result assertions
+    assert_eq!(result.functions_with_throws.len(), 4);
+    assert_eq!(result.calls_to_throws.len(), 4);
+    assert_eq!(result.imported_identifier_usages.len(), 0);
+    assert_eq!(result.import_sources.len(), 0);
+
+    // function names
+    let function_names: Vec<String> = result
+      .functions_with_throws
+      .iter()
+      .map(|f| f.function_or_method_name.clone())
+      .collect();
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+
+    ["someTsx", "someThrow2", "someThrow", "someAsyncTsx"]
+      .iter()
+      .for_each(|f| assert!(function_names_contains(&function_names, f)));
+
+    // calls to throws
+    let calls_to_throws: Vec<String> = result
+      .calls_to_throws
+      .iter()
+      .map(|c| c.id.clone())
+      .collect();
+
+    fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
+      calls_to_throws.iter().any(|c| c == call_to_throw)
+    }
+    [
+      "NOT_SET-callToThrow",
+      "NOT_SET-someTsxWithJsx",
+      "NOT_SET-callToThrow",
+      "NOT_SET-someTsxWithJsx",
+    ]
+    .iter()
+    .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
+  }
+
+  #[test]
+  fn test_jsx() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/jsx.jsx", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let cm: Lrc<SourceMap> = Default::default();
+
+    let (result, _cm) = analyze_code(&sample_code, cm);
+
+    // general result assertions
+    assert_eq!(result.functions_with_throws.len(), 4);
+    assert_eq!(result.calls_to_throws.len(), 4);
+    assert_eq!(result.imported_identifier_usages.len(), 0);
+    assert_eq!(result.import_sources.len(), 0);
+
+    // function names
+    let function_names: Vec<String> = result
+      .functions_with_throws
+      .iter()
+      .map(|f| f.function_or_method_name.clone())
+      .collect();
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+
+    ["someTsx", "someThrow2", "someThrow", "someAsyncTsx"]
+      .iter()
+      .for_each(|f| assert!(function_names_contains(&function_names, f)));
+
+    // calls to throws
+    let calls_to_throws: Vec<String> = result
+      .calls_to_throws
+      .iter()
+      .map(|c| c.id.clone())
+      .collect();
+
+    fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
+      calls_to_throws.iter().any(|c| c == call_to_throw)
+    }
+    [
+      "NOT_SET-callToThrow",
+      "NOT_SET-someTsxWithJsx",
+      "NOT_SET-callToThrow",
+      "NOT_SET-someTsxWithJsx",
+    ]
+    .iter()
+    .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
+  }
+
+  #[test]
+  fn imported_identifiers() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/importIdentifiers.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let cm: Lrc<SourceMap> = Default::default();
+
+    let (result, _cm) = analyze_code(&sample_code, cm);
+
+    // general result assertions
+    assert_eq!(result.functions_with_throws.len(), 0);
+    assert_eq!(result.calls_to_throws.len(), 0);
+    assert_eq!(result.imported_identifier_usages.len(), 5);
+    assert_eq!(result.import_sources.len(), 5);
+
+    let imported_identifier_usages = result
+      .imported_identifier_usages
+      .into_iter()
+      .map(|i| i.id)
+      .collect::<Vec<String>>();
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+    [
+      "NOT_SET-Something",
+      "NOT_SET-Testing",
+      "NOT_SET-SomethingElse",
+      "NOT_SET-resolve",
+      "NOT_SET-SomeThrow",
+    ]
+    .iter()
+    .for_each(|f| assert!(function_names_contains(&imported_identifier_usages, f)));
+
+    println!("Import sources {:?}", result.import_sources);
+
+    let import_sources = result
+      .import_sources
+      .into_iter()
+      .map(|i| i)
+      .collect::<Vec<String>>();
+    fn import_sources_contains(import_sources: &Vec<String>, import_source: &str) -> bool {
+      import_sources.iter().any(|f| f == import_source)
+    }
+    println!("Import sources {:?}", import_sources);
+    [
+      "./something3",
+      "path",
+      "./somethingElse2",
+      "./something",
+      "./somethingElse",
+    ]
+    .iter()
+    .for_each(|f| assert!(import_sources_contains(&import_sources, f)));
+  }
 }
