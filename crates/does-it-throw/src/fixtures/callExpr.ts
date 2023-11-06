@@ -28,3 +28,17 @@ connection.onInitialized(() => {
 connection.onInitialized2(() => {
 	throw new Error('hi khue')
 })
+
+
+SomeRandomCall(() => {
+	throw new Error('hi khue')
+})
+
+SomeRandomCall2(() => {
+	SomeThrow()
+	SomeThrow2()
+})
+
+connection.oneWithASecondArg({}, () => {
+	throw new Error('hi khue')
+})

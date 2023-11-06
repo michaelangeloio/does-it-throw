@@ -408,8 +408,8 @@ mod integration_tests {
     let (result, _cm) = analyze_code(&sample_code, cm);
 
     // general result assertions
-    assert_eq!(result.functions_with_throws.len(), 3);
-    assert_eq!(result.calls_to_throws.len(), 3);
+    assert_eq!(result.functions_with_throws.len(), 5);
+    assert_eq!(result.calls_to_throws.len(), 7);
     assert_eq!(result.imported_identifier_usages.len(), 0);
     assert_eq!(result.import_sources.len(), 0);
 
@@ -422,9 +422,15 @@ mod integration_tests {
     fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
       function_names.iter().any(|f| f == function_name)
     }
-    ["onInitialized2", "SomeThrow2", "SomeThrow"]
-      .iter()
-      .for_each(|f| assert!(function_names_contains(&function_names, f)));
+    [
+      "onInitialized2",
+      "SomeThrow2",
+      "SomeThrow",
+      "SomeRandomCall",
+      "oneWithASecondArg",
+    ]
+    .iter()
+    .for_each(|f| assert!(function_names_contains(&function_names, f)));
 
     // calls to throws
     let calls_to_throws: Vec<String> = result
@@ -436,9 +442,16 @@ mod integration_tests {
     fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
       calls_to_throws.iter().any(|c| c == call_to_throw)
     }
-
-    ["NOT_SET-onInitialized", "NOT_SET-onInitialized"]
-      .iter()
-      .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));	
+    [
+      "NOT_SET-onInitialized",
+      "NOT_SET-SomeRandomCall2",
+      "NOT_SET-<anonymous>",
+      "connection-<anonymous>",
+      "NOT_SET-onInitialized",
+      "NOT_SET-SomeRandomCall2",
+      "connection-<anonymous>",
+    ]
+    .iter()
+    .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
   }
 }
