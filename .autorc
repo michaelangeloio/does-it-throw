@@ -1,0 +1,15 @@
+{
+  "plugins": [
+    "crates",
+    "all-contributors",
+    "conventional-commits",
+    "first-time-contributor",
+    "released",
+		"vscode"
+  ],
+  "owner": "michaelangeloio",
+  "repo": "does-it-throw",
+  "name": "Michael Angelo Rivera",
+  "email": "email@michaelangelo.io",
+  "onlyPublishWithReleaseLabel": true
+}

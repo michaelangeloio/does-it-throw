@@ -1,6 +1,11 @@
 [package]
 name = "does-it-throw"
 version = "0.1.0"
+description = "LSP library for finding ES throw statements"
+license = "MIT"
+documentation = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
+repository = "https://github.com/michaelangeloio/does-it-throw"
+homepage = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
 
 [lib]
 bench = false

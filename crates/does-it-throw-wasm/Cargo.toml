@@ -2,12 +2,18 @@
 edition = "2021"
 name = "does-it-throw-wasm"
 version = "0.1.0"
+description = "LSP server wasm binding for does-it-throw"
+license = "MIT"
+documentation = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
+repository = "https://github.com/michaelangeloio/does-it-throw"
+homepage = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
+
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-does-it-throw = { path = "../does-it-throw" }
+does-it-throw = { path = "../does-it-throw", version = "0.1.0"}
 swc_common = "0.33"
 swc_ecma_parser = "0.141.3"
 swc_ecma_ast = "0.110.0"
