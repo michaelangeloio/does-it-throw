@@ -151,7 +151,7 @@ const findFirstFileThatExists = async (uri: string, relative_import: string) => 
   }
   return Promise.any(files.map(_checkAccessOnFile))
 }
-
+console.log('\x1b[36m%s\x1b[0m', 'hello')
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   try {
     const opts = {
