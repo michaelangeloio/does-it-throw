@@ -40,5 +40,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
         run: |
           bun run auto shipit
