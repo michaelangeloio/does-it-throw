@@ -439,6 +439,6 @@ mod integration_tests {
 
     ["NOT_SET-onInitialized", "NOT_SET-onInitialized"]
       .iter()
-      .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
+      .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));	
   }
 }
