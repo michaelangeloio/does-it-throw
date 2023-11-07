@@ -19,9 +19,7 @@
 		"@auto-it/all-contributors": "^11.0.4",
 		"@auto-it/conventional-commits": "^11.0.4",
 		"@auto-it/core": "^11.0.4",
-		"@auto-it/crates": "^11.0.4",
 		"@auto-it/first-time-contributor": "^11.0.4",
-		"@auto-it/vscode": "^11.0.4",
 		"@types/mocha": "^9.1.0",
 		"@types/node": "^16.18.34",
 		"@typescript-eslint/eslint-plugin": "^6.9.1",
@@ -35,6 +33,7 @@
 		"eslint": "^8.35.0",
 		"mocha": "^9.2.1",
 		"semver": "^7.5.4",
+		"toml": "^3.0.0",
 		"tsx": "^3.14.0",
 		"typescript": "5.2.2",
 		"user-home": "^3.0.0"

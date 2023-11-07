@@ -1,11 +1,11 @@
 {
   "plugins": [
 		".github/auto/crate-plugin.ts",
+		".github/auto/vscode-plugin.ts",
     "all-contributors",
     "conventional-commits",
     "first-time-contributor",
-    "released",
-		"vscode"
+    "released"
   ],
   "owner": "michaelangeloio",
   "repo": "does-it-throw",
