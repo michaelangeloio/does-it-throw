@@ -28,7 +28,9 @@ jobs:
           override: true
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack
+        uses: jetli/wasm-pack-action@0d096b08b4e5a7de8c28de67e11e945404e9eefa
+        with:
+          version: 'latest'
 
       - name: Install dependencies
         run: bun install
