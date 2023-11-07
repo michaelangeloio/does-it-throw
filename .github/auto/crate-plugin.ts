@@ -1,11 +1,8 @@
 import { Auto, execPromise, IPlugin, SEMVER } from '@auto-it/core'
-import { access, readFile, writeFile } from 'fs/promises'
-import isCi from 'is-ci'
+import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { inc, ReleaseType } from 'semver'
 import { parse as parseToml } from 'toml'
-import userHome from 'user-home'
-
 /** Get the parsed cargo.toml for the crate */
 export const getCargoConfig = async () => {
   const content = (await readFile(join(process.cwd() || process.env.GITHUB_WORKSPACE || '', 'Cargo.toml'))).toString()
@@ -14,17 +11,7 @@ export const getCargoConfig = async () => {
 
 /** Get the credentials for publishing to crates.io */
 export async function checkForCreds() {
-  if (isCi) {
-    return process.env.CARGO_REGISTRY_TOKEN
-  }
-
-  const credsFile = join(userHome, '.cargo', 'credentials')
-  try {
-    await access(credsFile)
-    return true
-  } catch (error) {
-    return false
-  }
+  return process.env.CARGO_REGISTRY_TOKEN
 }
 
 export async function getWorkspaceMembers(): Promise<
