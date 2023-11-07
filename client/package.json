@@ -1,5 +1,5 @@
 {
-	"name": "does-it-throw-client",
+	"name": "vscode-does-it-throw-client",
 	"description": "VSCode part of a language server",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
