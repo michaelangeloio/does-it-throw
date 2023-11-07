@@ -1,6 +1,6 @@
 import { Auto, execPromise, IPlugin, SEMVER } from '@auto-it/core'
 import { readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
+import { join, resolve } from 'path'
 import { inc, ReleaseType } from 'semver'
 import { parse as parseToml } from 'toml'
 /** Get the parsed cargo.toml for the crate */
@@ -23,7 +23,8 @@ export async function getWorkspaceMembers(): Promise<
 > {
   const { toml } = await getCargoConfig()
   return toml.workspace.members.map(async (member: string) => {
-    const packagePath = join(process.cwd() || process.env.GITHUB_WORKSPACE || '', member, 'Cargo.toml')
+    const packagePath = resolve(process.cwd() || process.env.GITHUB_WORKSPACE || '', member, 'Cargo.toml')
+		console.log('\x1b[36m%s\x1b[0m', packagePath)
     const packageContent = (await readFile(packagePath)).toString()
     const packageToml = parseToml(packageContent.toString())
     return {
@@ -39,6 +40,7 @@ export async function bumpVersions(bumpBy: SEMVER) {
   const workspaceMembers = await getWorkspaceMembers()
   const promises = workspaceMembers.map(async (member) => {
     const { packagePath, packageContent, packageToml } = member
+		console.log('\x1b[36m%s\x1b[0m', packageContent, packagePath, packageToml)
     const versionOld = packageToml.package.version
     const versionNew = inc(versionOld, bumpBy as ReleaseType)
 
