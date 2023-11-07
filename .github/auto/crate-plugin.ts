@@ -3,6 +3,7 @@ import { readdir, readFile, writeFile } from 'fs/promises'
 import { join, resolve } from 'path'
 import { inc, ReleaseType } from 'semver'
 import { parse as parseToml } from 'toml'
+import { inspect } from 'util'
 /** Get the parsed cargo.toml for the crate */
 export const getCargoConfig = async () => {
   const content = (await readFile(join(process.cwd() || process.env.GITHUB_WORKSPACE || '', 'Cargo.toml'))).toString()
@@ -23,7 +24,7 @@ export async function getWorkspaceMembers(): Promise<
 > {
   const { toml } = await getCargoConfig()
 	console.log('\x1b[36m%s\x1b[0m', 'testing', toml)
-  return toml.workspace.members.map(async (member: string) => {
+  const members = await Promise.all(toml.workspace.members.map(async (member: string) => {
 		console.log('\x1b[36m%s\x1b[0m', process.env.GITHUB_WORKSPACE, process.cwd())
 		const files = await readdir(process.env.GITHUB_WORKSPACE || '');
 		console.log('\x1b[36m%s\x1b[0m', process.env.GITHUB_WORKSPACE )
@@ -57,7 +58,9 @@ export async function getWorkspaceMembers(): Promise<
       packageToml,
       packageContent,
     }
-  })
+  }))
+	console.log('\x1b[36m%s\x1b[0m', inspect(members))
+	return members
 }
 
 /** Bump the version in cargo.toml */
