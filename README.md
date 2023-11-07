@@ -1,1 +1,4 @@
-something for now 2
+
+![icon](assets/icon.png)
+
+coming soon
