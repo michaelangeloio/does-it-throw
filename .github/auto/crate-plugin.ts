@@ -8,7 +8,7 @@ import userHome from 'user-home'
 
 /** Get the parsed cargo.toml for the crate */
 export const getCargoConfig = async () => {
-  const content = (await readFile(join(process.cwd(), 'Cargo.toml'))).toString()
+  const content = (await readFile(join(process.cwd() || process.env.GITHUB_WORKSPACE || '', 'Cargo.toml'))).toString()
   return { toml: parseToml(content), content }
 }
 
@@ -36,7 +36,7 @@ export async function getWorkspaceMembers(): Promise<
 > {
   const { toml } = await getCargoConfig()
   return toml.workspace.members.map(async (member: string) => {
-    const packagePath = join(process.cwd(), member, 'Cargo.toml')
+    const packagePath = join(process.cwd() || process.env.GITHUB_WORKSPACE || '', member, 'Cargo.toml')
     const packageContent = (await readFile(packagePath)).toString()
     const packageToml = parseToml(packageContent.toString())
     return {
