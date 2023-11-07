@@ -1,0 +1,27 @@
+{
+  "projectName": "does-it-throw",
+  "projectOwner": "michaelangeloio",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "contributors": [
+    {
+      "login": "michaelangeloio",
+      "name": "Michael Angelo Rivera",
+      "avatar_url": "https://avatars.githubusercontent.com/u/55844504?v=4",
+      "profile": "https://github.com/michaelangeloio",
+      "contributions": [
+        "code",
+        "infra",
+        "doc"
+      ]
+    }
+  ],
+  "repoType": "github",
+  "contributorsPerLine": 7,
+  "repoHost": "https://github.com",
+  "commitConvention": "angular",
+  "skipCi": true,
+  "commitType": "docs"
+}

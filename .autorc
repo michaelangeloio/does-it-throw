@@ -1,6 +1,6 @@
 {
   "plugins": [
-    "crates",
+		".github/auto/crate-plugin.ts",
     "all-contributors",
     "conventional-commits",
     "first-time-contributor",

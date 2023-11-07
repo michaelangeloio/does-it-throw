@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"strict": true,
 		"types": ["bun-types"],
 		"module": "commonjs",
 		"target": "es2021",
