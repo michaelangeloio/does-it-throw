@@ -1,4 +1,4 @@
 
-<img src="assets/someimage.png" alt="Alt text" width="600"/>
+![icon](assets/icon-small.png)
 
 coming soon
