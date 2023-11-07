@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: oven-sh/setup-bun@a1800f471a0bc25cddac36bb13e6f436ddf341d7
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@a1800f471a0bc25cddac36bb13e6f436ddf341d7
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1

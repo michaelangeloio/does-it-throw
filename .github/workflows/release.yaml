@@ -20,7 +20,8 @@ jobs:
           node-version: 20.x
           cache: 'npm'
 
-      - uses: oven-sh/setup-bun@a1800f471a0bc25cddac36bb13e6f436ddf341d7
+      - name: Install Bun
+        uses: oven-sh/setup-bun@a1800f471a0bc25cddac36bb13e6f436ddf341d7
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -47,6 +48,7 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
+          automatic_release_tag:  ${{github.ref_name}}
           files: |
             LICENSE.txt
             *.vsix
