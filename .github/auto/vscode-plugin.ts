@@ -88,8 +88,6 @@ export default class VscodePlugin implements IPlugin {
 
       await execPromise('git', ['add', '.'])
 
-      await execPromise('git', ['commit', '-m', 'chore: update version [skip ci]'])
-
       await execPromise('npm', [
         'version',
         newVersion,
