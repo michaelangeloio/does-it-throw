@@ -1,5 +1,5 @@
 import { Auto, execPromise, IPlugin, SEMVER } from '@auto-it/core'
-import { readFile, writeFile } from 'fs/promises'
+import { readdir, readFile, writeFile } from 'fs/promises'
 import { join, resolve } from 'path'
 import { inc, ReleaseType } from 'semver'
 import { parse as parseToml } from 'toml'
@@ -24,6 +24,29 @@ export async function getWorkspaceMembers(): Promise<
   const { toml } = await getCargoConfig()
   return toml.workspace.members.map(async (member: string) => {
 		console.log('\x1b[36m%s\x1b[0m', process.env.GITHUB_WORKSPACE, process.cwd())
+		const files = await readdir(process.env.GITHUB_WORKSPACE || '');
+		console.log('\x1b[36m%s\x1b[0m', process.env.GITHUB_WORKSPACE )
+		files.forEach(file => {
+			console.log(file, 'workspace');
+		})
+		const files2 = await readdir(process.cwd() || '');
+		console.log('\x1b[36m%s\x1b[0m', process.cwd())
+		files2.forEach(file => {
+			console.log(file, 'cwd');
+		})
+		const anotherPath = resolve(process.cwd() || process.env.GITHUB_WORKSPACE || '', member)
+		console.log('\x1b[36m%s\x1b[0m', anotherPath)
+		const files3 = await readdir(anotherPath);
+		files3.forEach(file => {
+			console.log(file, 'w/ member');
+		})
+		const trimmedDir =  anotherPath.replace('/does-it-throw', '')
+		console.log('\x1b[36m%s\x1b[0m', trimmedDir)
+		const files4 = await readdir(trimmedDir);
+		files4.forEach(file => {
+			console.log(file, 'w/ member trimmed');
+		})
+
     const packagePath = resolve(process.cwd() || process.env.GITHUB_WORKSPACE || '', member, 'Cargo.toml')
 		console.log('\x1b[36m%s\x1b[0m', packagePath)
     const packageContent = (await readFile(packagePath)).toString()
