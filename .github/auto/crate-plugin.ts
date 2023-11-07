@@ -22,6 +22,7 @@ export async function getWorkspaceMembers(): Promise<
   }[]
 > {
   const { toml } = await getCargoConfig()
+	console.log('\x1b[36m%s\x1b[0m', 'testing', toml)
   return toml.workspace.members.map(async (member: string) => {
 		console.log('\x1b[36m%s\x1b[0m', process.env.GITHUB_WORKSPACE, process.cwd())
 		const files = await readdir(process.env.GITHUB_WORKSPACE || '');
