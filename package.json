@@ -1,6 +1,6 @@
 {
 	"name": "does-it-throw",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"main": "./client/out/extension.js",
 	"repository": {
 		"url": "https://github.com/michaelangeloio/does-it-throw"
