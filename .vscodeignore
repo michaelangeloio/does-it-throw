@@ -9,3 +9,4 @@
 !server/out/**/*
 !package.json
 !README.md
+!assets/**/*
