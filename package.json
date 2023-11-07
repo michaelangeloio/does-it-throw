@@ -16,7 +16,6 @@
 		}
 	],
 	"devDependencies": {
-		"@changesets/cli": "^2.26.2",
 		"@types/mocha": "^9.1.0",
 		"@types/node": "^16.18.34",
 		"@typescript-eslint/eslint-plugin": "^6.9.1",
@@ -75,8 +74,8 @@
 		"compile": "bun run build.ts",
 		"watch": "bun run --watch build.ts",
 		"build": "bun run build.ts",
-		"release": "vsce publish",
-		"version-packages": "changeset version"
+		"vscode:release": "vsce publish",
+		"vscode:package": "vsce package"
 	},
 	"types": "index.d.ts",
 	"workspaces": [
