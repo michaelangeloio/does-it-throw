@@ -1,0 +1,7 @@
+# vscode-does-it-throw-client
+
+## 0.1.2
+
+### Patch Changes
+
+- 29193c1: testing vsce release process
