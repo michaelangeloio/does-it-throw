@@ -1,4 +1,4 @@
 
-![icon](assets/icon-128.png)
+![icon](assets/icon-small.png)
 
 coming soon
