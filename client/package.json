@@ -3,7 +3,7 @@
 	"description": "VSCode part of a language server",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"publisher": "vscode",
 	"repository": {
 		"type": "git",
