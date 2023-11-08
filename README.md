@@ -1,4 +1,4 @@
 
 ![icon](assets/icon-small.png)
 
-coming soon
+coming soon!
