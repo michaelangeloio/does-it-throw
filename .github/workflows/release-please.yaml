@@ -10,9 +10,15 @@ permissions:
 name: release-please
 
 jobs:
-  release-please:
+  release-please-node:
     runs-on: ubuntu-latest
     steps:
       - uses: google-github-actions/release-please-action@v3
         with:
           release-type: node
+  release-please-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: rust
