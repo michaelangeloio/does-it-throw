@@ -1,5 +1,5 @@
 {
-  "plugins": ["node-workspace", "cargo-workspace"],
+  "plugins": ["cargo-workspace"],
   "packages": {
     "crates/does-it-throw": {
       "changelog-path": "CHANGELOG.md",
