@@ -50,5 +50,6 @@
     {
       "type": "cargo-workspace"
     }
-  ]
+  ],
+  ".": "0.0.0"
 }
