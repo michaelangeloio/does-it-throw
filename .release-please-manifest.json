@@ -1,4 +1,3 @@
 {
-  "plugins": ["node-workspace", "cargo-workspace"],
-  ".": "0.0.0"
+  "crates/does-it-throw": "0.1.6"
 }
