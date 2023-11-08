@@ -1,5 +1,4 @@
 {
-  "plugins": ["node-workspace", "cargo-workspace"],
   "packages": {
     ".": {
       "changelog-path": "CHANGELOG.md",

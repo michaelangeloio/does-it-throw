@@ -1,3 +1,4 @@
 {
+  "plugins": ["node-workspace", "cargo-workspace"],
   ".": "0.0.0"
 }
