@@ -1,11 +1,11 @@
 {
 	"name": "does-it-throw",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"main": "./client/out/extension.js",
 	"repository": {
 		"url": "https://github.com/michaelangeloio/does-it-throw"
 	},
-	"icon": "assets/icon.png",
+	"icon": "assets/icon-128.png",
 	"author": {
 		"name": "Michael Angelo",
 		"email": "email@michaelangelo.io"
