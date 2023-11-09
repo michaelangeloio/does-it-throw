@@ -1,9 +1,9 @@
-name: Release
+name: Release VSIX
 
 on:
   push:
     tags:
-      - "vscode-v*"
+      - "does-it-throw-vscode-v*"
 
 jobs:
   release:
@@ -43,12 +43,3 @@ jobs:
         with:
           pat: ${{ secrets.VSCE_PAT }}
           registryUrl: https://marketplace.visualstudio.com
-
-      - uses: "marvinpinto/action-automatic-releases@919008cf3f741b179569b7a6fb4d8860689ab7f0"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          automatic_release_tag:  ${{github.ref_name}}
-          files: |
-            LICENSE.txt
-            *.vsix
