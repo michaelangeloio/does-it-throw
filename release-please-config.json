@@ -1,13 +1,24 @@
 {
-  "plugins": ["cargo-workspace"],
+  "plugins": [
+    "cargo-workspace",
+    {
+      "type": "linked-versions",
+      "groupName": "does-it-throw-rust",
+      "components": [
+        "crates/does-it-throw",
+        "crates/does-it-throw-wasm"
+      ]
+    }
+  ],
   "packages": {
     ".": {
-      "changelog-path": "CHANGELOG.md",
-      "release-type": "rust",
-      "bump-minor-pre-major": false,
-      "bump-patch-for-minor-pre-major": false,
-      "draft": false,
-      "prerelease": false
+      "release-type": "node"
+    },
+    "crates/does-it-throw": {
+      "release-type": "rust"
+    },
+    "crates/does-it-throw-wasm": {
+      "release-type": "rust"
     }
   },
   "bootstrap-sha": "89c1833c752211c7e712ef926c3d14f85ac1a779",
