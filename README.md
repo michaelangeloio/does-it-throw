@@ -3,4 +3,16 @@
 </p>
 
 
-coming soon!
+# Well, Does it Throw? 
+
+TLDR; This is a *blazingly* fast **lsp server** to find *throw statements* in your javascript code, based on [SWC](https://swc.rs/) 🔥.
+
+
+Check it out in action:
+
+![demo]("assets/basic-throw.gif")
+
+## Features
+
+
+
