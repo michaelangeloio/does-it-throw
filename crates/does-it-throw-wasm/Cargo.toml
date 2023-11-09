@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "does-it-throw-wasm"
-version = "0.1.9"
+version = "0.1.10"
 description = "a WASM binding for does-it-throw - using SWC"
 license = "MIT"
 documentation = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
@@ -13,7 +13,7 @@ homepage = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md
 crate-type = ["cdylib"]
 
 [dependencies]
-does-it-throw = { path = "../does-it-throw", version = "0.1.9"}
+does-it-throw = { path = "../does-it-throw", version = "0.1.10"}
 swc_common = "0.33"
 swc_ecma_parser = "0.141.3"
 swc_ecma_ast = "0.110.0"

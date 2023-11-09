@@ -1,5 +1,5 @@
 {
-  "crates/does-it-throw": "0.1.9",
-  "crates/does-it-throw-wasm": "0.1.9",
-  ".": "0.2.2"
+  "crates/does-it-throw": "0.1.10",
+  "crates/does-it-throw-wasm": "0.1.10",
+  ".": "0.2.3"
 }
