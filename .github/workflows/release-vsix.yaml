@@ -1,9 +1,7 @@
 name: Release VSIX
 
 on:
-  push:
-    tags:
-      - "does-it-throw-vscode-v*"
+  workflow_dispatch:
 
 jobs:
   release:
