@@ -1,6 +1,6 @@
 [package]
 name = "does-it-throw"
-version = "0.1.6"
+version = "0.1.7"
 description = "LSP library for finding ES throw statements, using SWC"
 license = "MIT"
 documentation = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
