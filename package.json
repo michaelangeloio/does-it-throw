@@ -1,6 +1,6 @@
 {
 	"name": "does-it-throw-vscode",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"main": "./client/out/extension.js",
 	"description": "lsp server for finding JS/TS statements that throw!",
 	"repository": {
