@@ -19,11 +19,11 @@ Also supports **call expressions**:
 
 ## Why?
 
-Untyped `throw` statements can be a pain for those who come from languages like Go, where errors are typically values. Even Rust has the `Result` type. Famously, Typescript has also (understandably) rejected the [feature request](https://github.com/microsoft/TypeScript/issues/13219). 
+Maybe you're working on a large codebase riddled with throw statements everywhere, and you want a better control flow. Or perhaps you're just curious about how many throw statements you have in your codebase. This simple tool can help you with that.
 
-But maybe you're working on a large codebase riddled with throw statements everywhere, and you want a better control flow. Or maybe you're just curious about how many throw statements you have in your codebase. This simple tool can help you with that.
+Untyped `throw` statements can be a pain for those who come from languages like Go, where errors are typically values and first class citizens. Even Rust has the `Result` type. Even though `throw` return types are not [directly supported](https://github.com/microsoft/TypeScript/issues/13219), it's still useful to know where they are in your codebase.
 
-This extension may not be for everyone, but it's definitely for me. I hope you find it useful too.
+> This extension may not be for everyone, but it's definitely for me. I hope you find it useful too.
 
 
 ## Installation
