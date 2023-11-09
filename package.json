@@ -2,7 +2,7 @@
 	"name": "does-it-throw-vscode",
 	"version": "0.2.2",
 	"main": "./client/out/extension.js",
-	"description": "lsp server for finding JS/TS statements that throw!",
+	"description": "easily find throw statements in your JS, TS, and JSX files!",
 	"repository": {
 		"url": "https://github.com/michaelangeloio/does-it-throw"
 	},
