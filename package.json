@@ -1,6 +1,6 @@
 {
 	"name": "does-it-throw-vscode",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"main": "./client/out/extension.js",
 	"description": "easily find throw statements in your JS, TS, and JSX files!",
 	"repository": {
