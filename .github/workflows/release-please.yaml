@@ -44,10 +44,3 @@ jobs:
         uses: google-github-actions/release-please-action@v3
         with:
           command: manifest 
-
-      - name: Publish to Visual Studio Marketplace
-        if: ${{ steps.release.outputs.release_created }}
-        uses: HaaLeo/publish-vscode-extension@65512ae7dcf96159b51fdd7ed73eb17d5cacad33
-        with:
-          pat: ${{ secrets.VSCE_PAT }}
-          registryUrl: https://marketplace.visualstudio.com
