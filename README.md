@@ -48,6 +48,8 @@ Untyped `throw` statements can be a pain for those who come from languages like 
 ## Contributing
 Contributions are certainly welcome! Please open an issue or submit a PR. If you find a use case that isn't supported yet, please search the open issues and open a new one if it doesn't exist.
 
+## Feedback & Suggestions
+Please use the GitHub discussions tab to provide feedback and suggestions. Thanks!
 
 ### Development & Technical Details
 Everything can be found in the [CONTRIBUTING.md](./CONTRIBUTING.md) file!
