@@ -1,5 +1,5 @@
 {
-	"name": "does-it-throw",
+	"name": "does-it-throw-vscode",
 	"version": "0.1.6",
 	"main": "./client/out/extension.js",
 	"repository": {

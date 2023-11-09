@@ -1,4 +1,7 @@
 {
+  "release-label": "released",
+  "include-v-in-tag": true,
+  "tag-separator": "-",
   "plugins": [
     "cargo-workspace",
     {

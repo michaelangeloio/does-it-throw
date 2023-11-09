@@ -2,7 +2,7 @@
 edition = "2021"
 name = "does-it-throw-wasm"
 version = "0.1.6"
-description = "LSP server wasm binding for does-it-throw"
+description = "LSP server wasm binding for does-it-throw, using SWC"
 license = "MIT"
 documentation = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
 repository = "https://github.com/michaelangeloio/does-it-throw"
