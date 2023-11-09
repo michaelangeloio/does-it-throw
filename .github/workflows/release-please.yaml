@@ -47,7 +47,7 @@ jobs:
       
       - name: Trigger VSIX Release
         if: ${{ steps.release.outputs.release_created }}
-        run: gh workflow run release-vsix.yml
+        run: gh workflow run release-vsix.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.VSIX_DISPATCH_TOKEN }}
 
