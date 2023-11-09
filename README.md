@@ -33,6 +33,8 @@ This extension may not be for everyone, but it's definitely for me. I hope you f
 | VsCode  | via [Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelangeloio.does-it-throw) |
 | NeoVim	| Coming soon... |
 
+> This extension is built with security in mind. It doesn't send any data to any third party servers. All publishes are done via a signed immutable commit from the [CI pipeline](https://github.com/michaelangeloio/does-it-throw/blob/update-details/.github/workflows/release-please.yaml).
+
 > The core of the code is written in Rust, and the LSP implementation for VsCode is written in Typescript. The Rust code is compiled to WASM and bundled with the VsCode extension. The extension is published to the VsCode marketplace, and the Rust code is published to [crates.io](https://crates.io/crates/does-it-throw). 
 
 
