@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.2.3...does-it-throw-vscode-v0.2.4) (2023-11-09)
+
+
+### Bug Fixes
+
+* update displayname ([#37](https://github.com/michaelangeloio/does-it-throw/issues/37)) ([cbaa0ad](https://github.com/michaelangeloio/does-it-throw/commit/cbaa0ad7a151559807985f6a4fde0dbd528cdd8a))
+
 ## [0.2.3](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.2.2...does-it-throw-vscode-v0.2.3) (2023-11-09)
 
 
