@@ -1,7 +1,7 @@
 {
   "plugins": ["cargo-workspace"],
   "packages": {
-    "crates/does-it-throw": {
+    ".": {
       "changelog-path": "CHANGELOG.md",
       "release-type": "rust",
       "bump-minor-pre-major": false,
