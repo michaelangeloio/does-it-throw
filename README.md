@@ -1,4 +1,4 @@
 
-![icon](assets/icon-small.png | width=400)
+<img src ="https://github.com/michaelangeloio/does-it-throw/blob/main/assets/icon-small.png?raw=true" width='400'>
 
 coming soon!
