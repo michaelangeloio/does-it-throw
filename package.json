@@ -12,6 +12,35 @@
 		"name": "Michael Angelo",
 		"email": "email@michaelangelo.io"
 	},
+	"categories": [
+		"Programming Languages",
+		"Linters",
+		"Debuggers"
+	],
+	"keywords": [
+		"does it throw",
+		"throw finder",
+		"throw",
+		"javascript",
+		"typescript"
+	],
+	"galleryBanner": {
+		"color": "#050b1f",
+		"theme": "dark"
+	},
+	"badges": [
+		{
+			"url": "https://github.com/michaelangeloio/does-it-throw/actions/workflows/rust.yaml/badge.svg",
+			"href": "https://github.com/michaelangeloio/does-it-throw",
+			"description": "Rust Build Status"
+		},
+		{
+			"url": "https://github.com/michaelangeloio/does-it-throw/actions/workflows/ts.yaml/badge.svg",
+			"href": "https://github.com/michaelangeloio/does-it-throw",
+			"description": "Node/Bun Build Status"
+		}
+	],
+	"qna": "https://github.com/michaelangeloio/does-it-throw/discussions",
 	"licenses": [
 		{
 			"type": "MIT",
