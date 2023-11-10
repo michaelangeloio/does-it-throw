@@ -8,9 +8,10 @@ use std::hash::{Hash, Hasher};
 use std::vec;
 
 use swc_ecma_ast::{
-  ArrowExpr, AssignExpr, BlockStmtOrExpr, ClassDecl, ClassMethod, Constructor, Decl, ExportDecl,
-  FnDecl, JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr,
-   ObjectLit, PatOrExpr, Prop, PropName, PropOrSpread, Stmt, VarDeclarator,
+  ArrowExpr, AssignExpr, AwaitExpr, BinExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod,
+  Constructor, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr,
+  JSXOpeningElement, MemberExpr, ObjectLit, OptChainBase, OptChainExpr, ParenExpr, PatOrExpr, Prop,
+  PropName, PropOrSpread, Stmt, VarDeclarator,
 };
 
 use self::swc_common::{sync::Lrc, SourceMap, Span};
@@ -38,7 +39,7 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
 
   let mut parser = Parser::new_from(lexer);
   let module = parser.parse_module().expect("Failed to parse module");
-  let mut collector = ThrowAnalyzer {
+  let mut throw_collector = ThrowAnalyzer {
     functions_with_throws: HashSet::new(),
     json_parse_calls: vec![],
     fs_access_calls: vec![],
@@ -47,11 +48,10 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
     function_name_stack: vec![],
     current_class_name: None,
     current_method_name: None,
-    imported_identifier_usages: HashSet::new(),
   };
-  collector.visit_module(&module);
+  throw_collector.visit_module(&module);
   let mut call_collector = CallFinder {
-    functions_with_throws: collector.functions_with_throws.clone(),
+    functions_with_throws: throw_collector.functions_with_throws.clone(),
     calls: HashSet::new(),
     current_class_name: None,
     instantiations: HashSet::new(),
@@ -59,9 +59,20 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
     object_property_stack: vec![],
   };
   call_collector.visit_module(&module);
+
+  let mut import_usages_collector = ImportUsageFinder {
+    imported_identifiers: throw_collector.imported_identifiers.clone(),
+    imported_identifier_usages: HashSet::new(),
+    current_class_name: None,
+    current_method_name: None,
+    function_name_stack: vec![],
+  };
+  import_usages_collector.visit_module(&module);
+
   let combined_analyzers = CombinedAnalyzers {
-    throw_analyzer: collector,
+    throw_analyzer: throw_collector,
     call_finder: call_collector,
+    import_usage_finder: import_usages_collector,
   };
 
   (combined_analyzers.into(), cm)
@@ -135,6 +146,7 @@ pub struct AnalysisResult {
 struct CombinedAnalyzers {
   throw_analyzer: ThrowAnalyzer,
   call_finder: CallFinder,
+  import_usage_finder: ImportUsageFinder,
 }
 
 impl From<CombinedAnalyzers> for AnalysisResult {
@@ -146,7 +158,7 @@ impl From<CombinedAnalyzers> for AnalysisResult {
       fs_access_calls: analyzers.throw_analyzer.fs_access_calls,
       import_sources: analyzers.throw_analyzer.import_sources,
       imported_identifiers: analyzers.throw_analyzer.imported_identifiers,
-      imported_identifier_usages: analyzers.throw_analyzer.imported_identifier_usages,
+      imported_identifier_usages: analyzers.import_usage_finder.imported_identifier_usages,
     }
   }
 }
@@ -185,7 +197,6 @@ struct ThrowAnalyzer {
   function_name_stack: Vec<String>,
   current_class_name: Option<String>,
   current_method_name: Option<String>,
-  imported_identifier_usages: HashSet<IdentifierUsage>,
 }
 
 impl ThrowAnalyzer {
@@ -221,7 +232,7 @@ impl ThrowAnalyzer {
     }
   }
 
-  fn check_arrow_function_for_throws(&mut self, arrow_function: &swc_ecma_ast::ArrowExpr) {
+  fn check_arrow_function_for_throws(&mut self, arrow_function: &ArrowExpr) {
     let mut throw_finder = ThrowFinder {
       throw_spans: vec![],
     };
@@ -319,41 +330,17 @@ impl ThrowAnalyzer {
 
 impl Visit for ThrowAnalyzer {
   fn visit_call_expr(&mut self, call: &CallExpr) {
-    if let swc_ecma_ast::Callee::Expr(expr) = &call.callee {
+    if let Callee::Expr(expr) = &call.callee {
       match &**expr {
         Expr::Member(member_expr) => {
-          if let Expr::Ident(object_ident) = &*member_expr.obj {
-            self.current_class_name = Some(object_ident.sym.to_string());
-          }
+          // if let Expr::Ident(object_ident) = &*member_expr.obj {
+          //   self.current_class_name = Some(object_ident.sym.to_string());
+          // }
 
           if let MemberProp::Ident(method_ident) = &member_expr.prop {
             self.current_method_name = Some(method_ident.sym.to_string());
           }
 
-          if let (Some(current_class_name), Some(current_method_name)) = (
-            self.current_class_name.clone(),
-            self.current_method_name.clone(),
-          ) {
-            if self.imported_identifiers.contains(&current_class_name) {
-              let usage_context = current_method_name.clone();
-              let id = format!(
-                "{}-{}",
-                self
-                  .current_class_name
-                  .clone()
-                  .unwrap_or_else(|| "NOT_SET".to_string()),
-                usage_context
-              );
-              // Create and store the identifier usage information
-              let usage_map = IdentifierUsage::new(
-                call.span,
-                current_class_name.clone(),
-                usage_context.clone(),
-                id.clone(),
-              );
-              self.imported_identifier_usages.insert(usage_map);
-            }
-          }
           for arg in &call.args {
             self.function_name_stack.push(
               self
@@ -371,34 +358,10 @@ impl Visit for ThrowAnalyzer {
             }
             self.function_name_stack.pop();
           }
-          self.current_class_name = None;
-          self.current_method_name = None;
         }
 
         Expr::Ident(ident) => {
           let called_function_name = ident.sym.to_string();
-          if self.imported_identifiers.contains(&called_function_name) {
-            let usage_context = self
-              .function_name_stack
-              .last()
-              .cloned()
-              .unwrap_or_else(|| "<anonymous>".to_string());
-            let id = format!(
-              "{}-{}",
-              self
-                .current_class_name
-                .clone()
-                .unwrap_or_else(|| "NOT_SET".to_string()),
-              called_function_name
-            );
-            let usage_map = IdentifierUsage::new(
-              call.span,
-              called_function_name.clone(),
-              usage_context.clone(),
-              id.clone(),
-            );
-            self.imported_identifier_usages.insert(usage_map);
-          }
           for arg in &call.args {
             self.function_name_stack.push(called_function_name.clone());
             if let Expr::Arrow(arrow_expr) = &*arg.expr {
@@ -574,7 +537,14 @@ impl Visit for ThrowAnalyzer {
         } else if let Expr::Arrow(arrow_expr) = &**init {
           self.function_name_stack.push(function_name.clone());
           throw_finder.visit_arrow_expr(arrow_expr);
+
           self.function_name_stack.pop();
+        }
+
+        if let Expr::Object(object_expr) = &**init {
+          self.current_class_name = Some(function_name.clone());
+          self.visit_object_lit(&object_expr);
+          self.current_class_name = None;
         }
 
         if !throw_finder.throw_spans.is_empty() {
@@ -635,7 +605,7 @@ impl Visit for ThrowAnalyzer {
     swc_ecma_visit::visit_function(self, function);
   }
 
-  fn visit_arrow_expr(&mut self, arrow_expr: &swc_ecma_ast::ArrowExpr) {
+  fn visit_arrow_expr(&mut self, arrow_expr: &ArrowExpr) {
     match &*arrow_expr.body {
       BlockStmtOrExpr::BlockStmt(block_stmt) => {
         for stmt in &block_stmt.stmts {
@@ -745,7 +715,18 @@ impl Visit for ThrowAnalyzer {
       self.current_class_name = Some(class_decl.ident.sym.to_string());
       self.visit_class(&class_decl.class);
       self.current_class_name = None;
-    } else {
+    }
+    // else if let Decl::Var(var_decl) = &export_decl.decl {
+    //   for declar in &var_decl.decls {
+    //     if let Some(ident) = &declar.name.as_ident() {
+    //       self.current_class_name = Some(ident.sym.to_string());
+    //     }
+    //     self.visit_var_declarator(&declar);
+    //     self.current_class_name = None;
+    //   }
+
+    // }
+    else {
       swc_ecma_visit::visit_export_decl(self, export_decl);
     }
   }
@@ -795,15 +776,6 @@ impl Hash for InstantiationsMap {
   }
 }
 
-struct CallFinder {
-  calls: HashSet<CallToThrowMap>,
-  functions_with_throws: HashSet<ThrowMap>,
-  current_class_name: Option<String>,
-  instantiations: HashSet<InstantiationsMap>,
-  function_name_stack: Vec<String>,
-  object_property_stack: Vec<String>,
-}
-
 // ----- CallFinder Visitor implementation -----
 // This module defines structures and implements functionality for identifying and mapping
 // function calls to their respective functions or methods that throw exceptions. It uses
@@ -823,6 +795,70 @@ struct CallFinder {
 // to match them with known functions or methods that throw exceptions using the data
 // accumulated in `functions_with_throws`. When a match is found, it records the mapping
 // in `calls`. It also tracks instantiations of classes to help resolve method calls.
+
+struct CallFinder {
+  calls: HashSet<CallToThrowMap>,
+  functions_with_throws: HashSet<ThrowMap>,
+  current_class_name: Option<String>,
+  instantiations: HashSet<InstantiationsMap>,
+  function_name_stack: Vec<String>,
+  object_property_stack: Vec<String>,
+}
+
+impl CallFinder {
+  fn handle_bin_expr(&mut self, bin_expr: &BinExpr) {
+    if let Expr::Call(call_expr) = &*bin_expr.left {
+      self.visit_call_expr(call_expr);
+    }
+    if let Expr::Call(call_expr) = &*bin_expr.right {
+      self.visit_call_expr(call_expr);
+    }
+    if let Expr::Await(await_expr) = &*bin_expr.left {
+      self.handle_await_expr(await_expr);
+    }
+    if let Expr::Await(await_expr) = &*bin_expr.right {
+      self.handle_await_expr(await_expr);
+    }
+    if let Expr::OptChain(opt_chain_expr) = &*bin_expr.left {
+      self.handle_opt_chain_expr(opt_chain_expr);
+    }
+    if let Expr::OptChain(opt_chain_expr) = &*bin_expr.right {
+      self.handle_opt_chain_expr(opt_chain_expr);
+    }
+    if let Expr::Paren(paren_expr) = &*bin_expr.left {
+      self.handle_paren_expr(paren_expr);
+    }
+    if let Expr::Paren(paren_expr) = &*bin_expr.right {
+      self.handle_paren_expr(paren_expr);
+    }
+  }
+
+  fn handle_paren_expr(&mut self, paren_expr: &ParenExpr) {
+    if let Expr::Call(call_expr) = &*paren_expr.expr {
+      self.visit_call_expr(call_expr);
+    }
+    if let Expr::Await(await_expr) = &*paren_expr.expr {
+      self.handle_await_expr(await_expr);
+    }
+    if let Expr::OptChain(opt_chain_expr) = &*paren_expr.expr {
+      self.handle_opt_chain_expr(opt_chain_expr);
+    }
+  }
+
+  fn handle_opt_chain_expr(&mut self, opt_chain_expr: &OptChainExpr) {
+    if let OptChainBase::Member(expr) = &*opt_chain_expr.base {
+      if let Expr::Call(call_expr) = &*expr.obj {
+        self.visit_call_expr(call_expr);
+      }
+    }
+  }
+
+  fn handle_await_expr(&mut self, await_expr: &AwaitExpr) {
+    if let Expr::Call(call_expr) = &*await_expr.arg {
+      self.visit_call_expr(call_expr);
+    }
+  }
+}
 
 impl Visit for CallFinder {
   fn visit_class_decl(&mut self, class_decl: &ClassDecl) {
@@ -880,7 +916,7 @@ impl Visit for CallFinder {
   }
 
   fn visit_call_expr(&mut self, call: &CallExpr) {
-    if let swc_ecma_ast::Callee::Expr(expr) = &call.callee {
+    if let Callee::Expr(expr) = &call.callee {
       match &**expr {
         Expr::Member(member_expr) => {
           let mut possible_class_name = None;
@@ -1018,19 +1054,42 @@ impl Visit for CallFinder {
         }
         _ => {}
       }
+      if let Expr::Bin(bin_expr) = &**init_expr {
+        self.handle_bin_expr(bin_expr)
+      }
     }
     if let Some(ident) = &var_declarator.name.as_ident() {
       if let Some(init) = &var_declarator.init {
+        if let Expr::Await(await_expr) = &**init {
+          if let Expr::Call(call_expr) = &*await_expr.arg {
+            self.visit_call_expr(call_expr);
+          }
+        }
+        if let Expr::Bin(bin_expr) = &**init {
+          if let Expr::Call(call_expr) = &*bin_expr.left {
+            self.visit_call_expr(call_expr);
+          }
+          if let Expr::Call(call_expr) = &*bin_expr.right {
+            self.visit_call_expr(call_expr);
+          }
+        }
+        if let Expr::OptChain(opt_chain_expr) = &**init {
+          if let OptChainBase::Member(expr) = &*opt_chain_expr.base {
+            if let Expr::Call(call_expr) = &*expr.obj {
+              self.visit_call_expr(call_expr);
+            }
+          }
+        }
         if let Expr::Arrow(arrow_expr) = &**init {
-					self.function_name_stack.push(ident.sym.to_string());
-					self.visit_arrow_expr(arrow_expr);
-					self.function_name_stack.pop();
-				}
-				if let Expr::Fn(fn_expr) = &**init {
-					self.function_name_stack.push(ident.sym.to_string());
-					self.visit_function(&fn_expr.function);
-					self.function_name_stack.pop();
-				}
+          self.function_name_stack.push(ident.sym.to_string());
+          self.visit_arrow_expr(arrow_expr);
+          self.function_name_stack.pop();
+        }
+        if let Expr::Fn(fn_expr) = &**init {
+          self.function_name_stack.push(ident.sym.to_string());
+          self.visit_function(&fn_expr.function);
+          self.function_name_stack.pop();
+        }
       }
     }
 
@@ -1065,6 +1124,19 @@ impl Visit for CallFinder {
 
   fn visit_stmt(&mut self, stmt: &Stmt) {
     match stmt {
+      Stmt::Decl(decl) => {
+        if let Decl::Var(var_decl) = decl {
+          for decl in &var_decl.decls {
+            self.visit_var_declarator(decl);
+          }
+        }
+        if let Decl::Fn(fn_decl) = decl {
+          self.visit_fn_decl(fn_decl);
+        }
+        if let Decl::Class(class_decl) = decl {
+          self.visit_class_decl(class_decl);
+        }
+      }
       Stmt::Expr(expr_stmt) => {
         self.visit_expr(&expr_stmt.expr);
       }
@@ -1090,6 +1162,115 @@ impl Visit for CallFinder {
   fn visit_expr(&mut self, expr: &Expr) {
     if let Expr::Call(call_expr) = &*expr {
       self.visit_call_expr(call_expr)
+    }
+  }
+}
+
+struct ImportUsageFinder {
+  imported_identifiers: Vec<String>,
+  imported_identifier_usages: HashSet<IdentifierUsage>,
+  current_class_name: Option<String>,
+  current_method_name: Option<String>,
+  function_name_stack: Vec<String>,
+}
+
+impl Visit for ImportUsageFinder {
+  fn visit_call_expr(&mut self, call: &CallExpr) {
+    if let Callee::Expr(expr) = &call.callee {
+      match &**expr {
+        Expr::Member(member_expr) => {
+          if let Expr::Ident(object_ident) = &*member_expr.obj {
+            self.current_class_name = Some(object_ident.sym.to_string());
+          }
+
+          if let MemberProp::Ident(method_ident) = &member_expr.prop {
+            self.current_method_name = Some(method_ident.sym.to_string());
+          }
+
+          if let (Some(current_class_name), Some(current_method_name)) = (
+            self.current_class_name.clone(),
+            self.current_method_name.clone(),
+          ) {
+            if self.imported_identifiers.contains(&current_class_name) {
+              let usage_context = current_method_name.clone();
+              let id = format!(
+                "{}-{}",
+                self
+                  .current_class_name
+                  .clone()
+                  .unwrap_or_else(|| "NOT_SET".to_string()),
+                usage_context
+              );
+              // Create and store the identifier usage information
+              let usage_map = IdentifierUsage::new(
+                call.span,
+                current_class_name.clone(),
+                usage_context.clone(),
+                id.clone(),
+              );
+              self.imported_identifier_usages.insert(usage_map);
+            }
+          }
+          for arg in &call.args {
+            self.function_name_stack.push(
+              self
+                .current_method_name
+                .clone()
+                .unwrap_or_else(|| "<anonymous>".to_string()),
+            );
+            if let Expr::Arrow(arrow_expr) = &*arg.expr {
+              self.visit_arrow_expr(&arrow_expr)
+            }
+            if let Expr::Fn(fn_expr) = &*arg.expr {
+              self.visit_function(&fn_expr.function)
+            }
+            self.function_name_stack.pop();
+          }
+          self.current_class_name = None;
+          self.current_method_name = None;
+        }
+
+        Expr::Ident(ident) => {
+          let called_function_name = ident.sym.to_string();
+          if self.imported_identifiers.contains(&called_function_name) {
+            let usage_context = self
+              .function_name_stack
+              .last()
+              .cloned()
+              .unwrap_or_else(|| "<anonymous>".to_string());
+            let id = format!(
+              "{}-{}",
+              self
+                .current_class_name
+                .clone()
+                .unwrap_or_else(|| "NOT_SET".to_string()),
+              called_function_name
+            );
+            let usage_map = IdentifierUsage::new(
+              call.span,
+              called_function_name.clone(),
+              usage_context.clone(),
+              id.clone(),
+            );
+            self.imported_identifier_usages.insert(usage_map);
+          }
+          for arg in &call.args {
+            self.function_name_stack.push(called_function_name.clone());
+            if let Expr::Arrow(arrow_expr) = &*arg.expr {
+              self.visit_arrow_expr(&arrow_expr);
+            }
+            if let Expr::Fn(fn_expr) = &*arg.expr {
+              self.visit_function(&fn_expr.function);
+            }
+            self.function_name_stack.pop();
+          }
+          self.current_class_name = None;
+          self.current_method_name = None;
+        }
+
+        Expr::Arrow(arrow_expr) => {}
+        _ => {}
+      }
     }
   }
 }

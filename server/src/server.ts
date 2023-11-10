@@ -1,11 +1,11 @@
 import {
-	DidChangeConfigurationNotification,
-	InitializeParams,
-	InitializeResult,
-	ProposedFeatures,
-	TextDocumentSyncKind,
-	TextDocuments,
-	createConnection,
+  DidChangeConfigurationNotification,
+  InitializeParams,
+  InitializeResult,
+  ProposedFeatures,
+  TextDocumentSyncKind,
+  TextDocuments,
+  createConnection,
 } from 'vscode-languageserver/node'
 
 import { access, constants, readFile } from 'fs/promises'
@@ -72,15 +72,26 @@ connection.onInitialized(() => {
   }
 })
 
-// The example settings
+type DiagnosticSeverity = 'Error' | 'Warning' | 'Information' | 'Hint'
+
+// The server settings
 interface Settings {
   maxNumberOfProblems: number
+  throwStatementSeverity: DiagnosticSeverity
+  functionThrowSeverity: DiagnosticSeverity
+  callToThrowSeverity: DiagnosticSeverity
+  callToImportedThrowSeverity: DiagnosticSeverity
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: Settings = { maxNumberOfProblems: 1000000 }
+const defaultSettings: Settings = { maxNumberOfProblems: 1000000,
+  throwStatementSeverity: 'Hint',
+  functionThrowSeverity: 'Hint',
+  callToThrowSeverity: 'Hint',
+  callToImportedThrowSeverity: 'Hint'
+}
 // 👆 very unlikely someone will have more than 1 million throw statements, lol
 // if you do, might want to rethink your code?
 let globalSettings: Settings = defaultSettings
@@ -100,7 +111,6 @@ connection.onDidChangeConfiguration((change) => {
   documents.all().forEach(validateTextDocument)
 })
 
-// TODO - use this later if needed
 function getDocumentSettings(resource: string): Thenable<Settings> {
   if (!hasConfigurationCapability) {
     return Promise.resolve(globalSettings)
@@ -153,6 +163,7 @@ const findFirstFileThatExists = async (uri: string, relative_import: string) => 
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+  const settings = await getDocumentSettings(textDocument.uri)
   try {
     const opts = {
       uri: textDocument.uri,
@@ -161,6 +172,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       typescript_settings: {
         decorators: true,
       },
+      function_throw_severity: settings.functionThrowSeverity,
+      throw_statement_severity: settings.throwStatementSeverity,
+      call_to_imported_throw_severity: settings.callToImportedThrowSeverity,
+      call_to_throw_severity: settings.callToThrowSeverity,
     } satisfies InputData
     const analysis = parse_js(opts) as ParseResult
 
@@ -214,6 +229,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: analysis.diagnostics })
   } catch (e) {
+    console.log(e)
     connection.console.log(`${e instanceof Error ? e.message : JSON.stringify(e)} error`)
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] })
   }

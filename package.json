@@ -76,6 +76,54 @@
 			"type": "object",
 			"title": "Example configuration",
 			"properties": {
+				"doesItThrow.throwStatementSeverity": {
+					"scope": "resource",
+					"type": "string",
+					"enum": [
+						"Error",
+						"Warning",
+						"Information",
+						"Hint"
+					],
+					"default": "Hint",
+					"description": "Controls the severity level (underline) of a throw statement."
+				},
+				"doesItThrow.functionThrowSeverity": {
+					"scope": "resource",
+					"type": "string",
+					"enum": [
+						"Error",
+						"Warning",
+						"Information",
+						"Hint"
+					],
+					"default": "Hint",
+					"description": "Controls the severity level (underline) of a function/const that throws."
+				},
+				"doesItThrow.callToThrowSeverity": {
+					"scope": "resource",
+					"type": "string",
+					"enum": [
+						"Error",
+						"Warning",
+						"Information",
+						"Hint"
+					],
+					"default": "Hint",
+					"description": "Controls the severity level (underline) of a function/const that calls a function that throws in the same file."
+				},
+				"doesItThrow.callToImportedThrowSeverity": {
+					"scope": "resource",
+					"type": "string",
+					"enum": [
+						"Error",
+						"Warning",
+						"Information",
+						"Hint"
+					],
+					"default": "Hint",
+					"description": "Controls the severity level (underline) of a function/const that calls a function that throws in a different file."
+				},
 				"doesItThrow.maxNumberOfProblems": {
 					"scope": "resource",
 					"type": "number",
@@ -91,7 +139,7 @@
 						"verbose"
 					],
 					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
+					"description": "Enable for debug mode. Traces the communication between VS Code and the language server."
 				}
 			}
 		}
