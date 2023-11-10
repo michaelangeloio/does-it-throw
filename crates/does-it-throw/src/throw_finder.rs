@@ -8,18 +8,15 @@ use std::hash::{Hash, Hasher};
 use std::vec;
 
 use swc_ecma_ast::{
-  ArrowExpr, AssignExpr, AwaitExpr, BinExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod,
-  Constructor, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr,
-  JSXOpeningElement, MemberExpr, ObjectLit, OptChainBase, OptChainExpr, ParenExpr, PatOrExpr, Prop,
-  PropName, PropOrSpread, Stmt, VarDeclarator,
+  ArrowExpr, AssignExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod, Constructor, Decl,
+  ExportDecl, FnDecl, ObjectLit, PatOrExpr, Prop, PropName, PropOrSpread, Stmt, VarDeclarator,
 };
 
-use self::swc_common::{sync::Lrc, SourceMap, Span};
+use self::swc_common::Span;
 use self::swc_ecma_ast::{
-  CallExpr, EsVersion, Expr, Function, ImportDecl, ImportSpecifier, MemberProp, ModuleExportName,
-  ThrowStmt,
+  CallExpr, Expr, Function, ImportDecl, ImportSpecifier, MemberProp, ModuleExportName, ThrowStmt,
 };
-use self::swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax};
+
 use self::swc_ecma_visit::Visit;
 
 fn prop_name_to_string(prop_name: &PropName) -> String {
@@ -75,7 +72,6 @@ impl Hash for IdentifierUsage {
     self.usage_span.hi.hash(state);
   }
 }
-
 
 #[derive(Clone)]
 pub struct ThrowMap {
@@ -264,7 +260,7 @@ impl Visit for ThrowAnalyzer {
             );
             if let Expr::Arrow(arrow_expr) = &*arg.expr {
               self.check_arrow_function_for_throws(arrow_expr);
-              self.visit_arrow_expr(&arrow_expr)
+              self.visit_arrow_expr(arrow_expr)
             }
             if let Expr::Fn(fn_expr) = &*arg.expr {
               self.check_function_for_throws(&fn_expr.function);
@@ -280,7 +276,7 @@ impl Visit for ThrowAnalyzer {
             self.function_name_stack.push(called_function_name.clone());
             if let Expr::Arrow(arrow_expr) = &*arg.expr {
               self.check_arrow_function_for_throws(arrow_expr);
-              self.visit_arrow_expr(&arrow_expr);
+              self.visit_arrow_expr(arrow_expr);
             }
             if let Expr::Fn(fn_expr) = &*arg.expr {
               self.check_function_for_throws(&fn_expr.function);
@@ -457,7 +453,7 @@ impl Visit for ThrowAnalyzer {
 
         if let Expr::Object(object_expr) = &**init {
           self.current_class_name = Some(function_name.clone());
-          self.visit_object_lit(&object_expr);
+          self.visit_object_lit(object_expr);
           self.current_class_name = None;
         }
 
@@ -550,7 +546,7 @@ impl Visit for ThrowAnalyzer {
       }
       Stmt::If(if_stmt) => {
         self.visit_expr(&if_stmt.test);
-        self.visit_stmt(&*if_stmt.cons);
+        self.visit_stmt(&if_stmt.cons);
         if let Some(alt) = &if_stmt.alt {
           self.visit_stmt(alt);
         }
@@ -563,7 +559,7 @@ impl Visit for ThrowAnalyzer {
   }
 
   fn visit_expr(&mut self, expr: &Expr) {
-    if let Expr::Call(call_expr) = &*expr {
+    if let Expr::Call(call_expr) = expr {
       self.visit_call_expr(call_expr)
     }
     swc_ecma_visit::visit_expr(self, expr);
@@ -571,7 +567,7 @@ impl Visit for ThrowAnalyzer {
 
   fn visit_constructor(&mut self, constructor: &Constructor) {
     self.current_method_name = Some("<constructor>".to_string());
-    self.check_constructor_for_throws(&constructor);
+    self.check_constructor_for_throws(constructor);
     if let Some(constructor) = &constructor.body {
       for stmt in &constructor.stmts {
         self.visit_stmt(stmt);

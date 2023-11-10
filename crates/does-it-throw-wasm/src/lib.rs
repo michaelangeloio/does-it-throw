@@ -117,16 +117,16 @@ fn get_line_start_byte_pos(cm: &SourceMap, lo_byte_pos: BytePos, hi_byte_pos: By
   // Split the source into lines and reverse the list to find the newline character from the end (which would be the start of the line)
   let lines = src.lines().rev().collect::<Vec<&str>>();
 
-  if let Some(last_line) = lines.iter().next() {
+  if let Some(last_line) = lines.first() {
     // Calculate the byte position of the start of the line of interest
     let start_pos = last_line.chars().position(|c| c != ' ' && c != '\t');
-    let line_start_byte_pos = if let Some(pos) = start_pos {
+
+    if let Some(pos) = start_pos {
       hi_byte_pos - BytePos((last_line.len() - pos) as u32)
     } else {
       // If there's no content (only whitespace), then we are at the start of the line
       hi_byte_pos - BytePos(last_line.len() as u32)
-    };
-    line_start_byte_pos
+    }
   } else {
     // If there's no newline character, then we are at the start of the file
     BytePos(0)
@@ -160,12 +160,12 @@ pub fn add_diagnostics_for_functions_that_throw(
   for fun in &functions_with_throws {
     let function_start = cm.lookup_char_pos(fun.throw_statement.lo());
     let line_end_byte_pos =
-      get_line_end_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
+      get_line_end_byte_pos(cm, fun.throw_statement.lo(), fun.throw_statement.hi());
 
     let function_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
     let start_character_byte_pos =
-      get_line_start_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
+      get_line_start_byte_pos(cm, fun.throw_statement.lo(), fun.throw_statement.hi());
     let start_character = cm.lookup_char_pos(start_character_byte_pos);
 
     if debug == Some(true) {
@@ -228,7 +228,7 @@ pub fn add_diagnostics_for_calls_to_throws(
   for call in &calls_to_throws {
     let call_start = cm.lookup_char_pos(call.call_span.lo());
 
-    let line_end_byte_pos = get_line_end_byte_pos(&cm, call.call_span.lo(), call.call_span.hi());
+    let line_end_byte_pos = get_line_end_byte_pos(cm, call.call_span.lo(), call.call_span.hi());
 
     let call_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
@@ -332,7 +332,7 @@ impl ParseResult {
     add_diagnostics_for_functions_that_throw(
       &mut diagnostics,
       results.functions_with_throws.clone(),
-      &cm,
+      cm,
       debug,
       DiagnosticSeverity::from(
         input_data
@@ -348,7 +348,7 @@ impl ParseResult {
     add_diagnostics_for_calls_to_throws(
       &mut diagnostics,
       results.calls_to_throws,
-      &cm,
+      cm,
       debug,
       DiagnosticSeverity::from(
         input_data
@@ -367,7 +367,7 @@ impl ParseResult {
       relative_imports: get_relative_imports(results.import_sources.into_iter().collect()),
       imported_identifiers_diagnostics: identifier_usages_vec_to_combined_map(
         results.imported_identifier_usages,
-        &cm,
+        cm,
         debug,
         DiagnosticSeverity::from(
           input_data

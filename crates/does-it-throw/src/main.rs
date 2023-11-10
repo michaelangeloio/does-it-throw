@@ -596,11 +596,7 @@ mod integration_tests {
 
     println!("Import sources {:?}", result.import_sources);
 
-    let import_sources = result
-      .import_sources
-      .into_iter()
-      .map(|i| i)
-      .collect::<Vec<String>>();
+    let import_sources = result.import_sources.into_iter().collect::<Vec<String>>();
     fn import_sources_contains(import_sources: &Vec<String>, import_source: &str) -> bool {
       import_sources.iter().any(|f| f == import_source)
     }
@@ -615,7 +611,6 @@ mod integration_tests {
     .iter()
     .for_each(|f| assert!(import_sources_contains(&import_sources, f)));
   }
-
 
   #[test]
   fn test_spread_expr() {
@@ -642,11 +637,9 @@ mod integration_tests {
     fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
       function_names.iter().any(|f| f == function_name)
     }
-    [
-      "_contextFromWorkflow", "_contextFromWorkflow"
-    ]
-    .iter()
-    .for_each(|f| assert!(function_names_contains(&function_names, f)));
+    ["_contextFromWorkflow", "_contextFromWorkflow"]
+      .iter()
+      .for_each(|f| assert!(function_names_contains(&function_names, f)));
 
     // calls to throws
     let calls_to_throws: Vec<String> = result
@@ -659,10 +652,8 @@ mod integration_tests {
       calls_to_throws.iter().any(|c| c == call_to_throw)
     }
     println!("Calls to throws {:?}", calls_to_throws);
-    [
-      "SomeClass-someCallToThrow", "SomeClass-someCallToThrow"
-    ]
-    .iter()
-    .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
+    ["SomeClass-someCallToThrow", "SomeClass-someCallToThrow"]
+      .iter()
+      .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
   }
 }

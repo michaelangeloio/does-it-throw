@@ -4,24 +4,13 @@ extern crate swc_ecma_parser;
 extern crate swc_ecma_visit;
 
 use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
-use std::vec;
 
-use swc_ecma_ast::{
-  ArrowExpr, AssignExpr, AwaitExpr, BinExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod,
-  Constructor, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr,
-  JSXOpeningElement, MemberExpr, ObjectLit, OptChainBase, OptChainExpr, ParenExpr, PatOrExpr, Prop,
-  PropName, PropOrSpread, Stmt, VarDeclarator,
-};
+use swc_ecma_ast::Callee;
 
 use crate::throw_finder::IdentifierUsage;
 
-use self::swc_common::{sync::Lrc, SourceMap, Span};
-use self::swc_ecma_ast::{
-  CallExpr, EsVersion, Expr, Function, ImportDecl, ImportSpecifier, MemberProp, ModuleExportName,
-  ThrowStmt,
-};
-use self::swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax};
+use self::swc_ecma_ast::{CallExpr, Expr, MemberProp};
+
 use self::swc_ecma_visit::Visit;
 
 pub struct ImportUsageFinder {
@@ -77,7 +66,7 @@ impl Visit for ImportUsageFinder {
                 .unwrap_or_else(|| "<anonymous>".to_string()),
             );
             if let Expr::Arrow(arrow_expr) = &*arg.expr {
-              self.visit_arrow_expr(&arrow_expr)
+              self.visit_arrow_expr(arrow_expr)
             }
             if let Expr::Fn(fn_expr) = &*arg.expr {
               self.visit_function(&fn_expr.function)
@@ -115,7 +104,7 @@ impl Visit for ImportUsageFinder {
           for arg in &call.args {
             self.function_name_stack.push(called_function_name.clone());
             if let Expr::Arrow(arrow_expr) = &*arg.expr {
-              self.visit_arrow_expr(&arrow_expr);
+              self.visit_arrow_expr(arrow_expr);
             }
             if let Expr::Fn(fn_expr) = &*arg.expr {
               self.visit_function(&fn_expr.function);
@@ -126,7 +115,7 @@ impl Visit for ImportUsageFinder {
           self.current_method_name = None;
         }
 
-        Expr::Arrow(arrow_expr) => {}
+        Expr::Arrow(_arrow_expr) => {}
         _ => {}
       }
     }

@@ -5,23 +5,18 @@ extern crate swc_ecma_visit;
 
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
-use std::vec;
 
 use swc_ecma_ast::{
-  ArrowExpr, AssignExpr, AwaitExpr, BinExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod,
-  Constructor, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr,
-  JSXOpeningElement, MemberExpr, ObjectLit, OptChainBase, OptChainExpr, ParenExpr, PatOrExpr, Prop,
-  PropName, PropOrSpread, Stmt, VarDeclarator,
+  ArrowExpr, AwaitExpr, BinExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod, Decl, FnDecl,
+  JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr, JSXOpeningElement, MemberExpr, OptChainBase,
+  OptChainExpr, ParenExpr, Stmt, VarDeclarator,
 };
 
 use crate::throw_finder::ThrowMap;
 
-use self::swc_common::{sync::Lrc, SourceMap, Span};
-use self::swc_ecma_ast::{
-  CallExpr, EsVersion, Expr, Function, ImportDecl, ImportSpecifier, MemberProp, ModuleExportName,
-  ThrowStmt,
-};
-use self::swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax};
+use self::swc_common::Span;
+use self::swc_ecma_ast::{CallExpr, Expr, Function, MemberProp};
+
 use self::swc_ecma_visit::Visit;
 
 pub struct CallToThrowMap {
@@ -338,7 +333,7 @@ impl Visit for CallFinder {
             if let Some(var_ident) = &var_declarator.name.as_ident() {
               let var_name = var_ident.sym.to_string();
               self.instantiations.insert(InstantiationsMap {
-                class_name: class_name,
+                class_name,
                 variable_name: var_name,
               });
             }
@@ -439,7 +434,7 @@ impl Visit for CallFinder {
       }
       Stmt::If(if_stmt) => {
         self.visit_expr(&if_stmt.test);
-        self.visit_stmt(&*if_stmt.cons);
+        self.visit_stmt(&if_stmt.cons);
         if let Some(alt) = &if_stmt.alt {
           self.visit_stmt(alt);
         }
@@ -452,7 +447,7 @@ impl Visit for CallFinder {
   }
 
   fn visit_expr(&mut self, expr: &Expr) {
-    if let Expr::Call(call_expr) = &*expr {
+    if let Expr::Call(call_expr) = expr {
       self.visit_call_expr(call_expr)
     }
   }

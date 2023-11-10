@@ -1,32 +1,20 @@
-pub mod throw_finder;
 pub mod call_finder;
 pub mod import_usage_finder;
-use throw_finder::{ThrowAnalyzer, ThrowMap, IdentifierUsage};
+pub mod throw_finder;
 use call_finder::{CallFinder, CallToThrowMap};
 use import_usage_finder::ImportUsageFinder;
+use throw_finder::{IdentifierUsage, ThrowAnalyzer, ThrowMap};
 extern crate swc_common;
 extern crate swc_ecma_ast;
 extern crate swc_ecma_parser;
 extern crate swc_ecma_visit;
 
-
-
 use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
+
 use std::vec;
 
-use swc_ecma_ast::{
-  ArrowExpr, AssignExpr, AwaitExpr, BinExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod,
-  Constructor, Decl, ExportDecl, FnDecl, JSXAttr, JSXAttrOrSpread, JSXAttrValue, JSXExpr,
-  JSXOpeningElement, MemberExpr, ObjectLit, OptChainBase, OptChainExpr, ParenExpr, PatOrExpr, Prop,
-  PropName, PropOrSpread, Stmt, VarDeclarator,
-};
-
-use self::swc_common::{sync::Lrc, SourceMap, Span};
-use self::swc_ecma_ast::{
-  CallExpr, EsVersion, Expr, Function, ImportDecl, ImportSpecifier, MemberProp, ModuleExportName,
-  ThrowStmt,
-};
+use self::swc_common::{sync::Lrc, SourceMap};
+use self::swc_ecma_ast::EsVersion;
 use self::swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax};
 use self::swc_ecma_visit::Visit;
 
@@ -116,5 +104,3 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
 
   (combined_analyzers.into(), cm)
 }
-
-
