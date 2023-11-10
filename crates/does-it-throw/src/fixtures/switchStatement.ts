@@ -6,7 +6,7 @@ const someRandomThrow = () => {
   throw new Error('some random throw')
 }
 
-export const server = http.createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
 
   switch (req.url) {
     case '/api/pong':
