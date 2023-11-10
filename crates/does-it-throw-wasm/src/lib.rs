@@ -14,7 +14,9 @@ use self::swc_common::{sync::Lrc, SourceMap, SourceMapper, Span};
 use swc_common::BytePos;
 use wasm_bindgen::prelude::*;
 
-use does_it_throw::{analyze_code, AnalysisResult, CallToThrowMap, IdentifierUsage, ThrowMap};
+use does_it_throw::call_finder::CallToThrowMap;
+use does_it_throw::throw_finder::{IdentifierUsage, ThrowMap};
+use does_it_throw::{analyze_code, AnalysisResult};
 
 // Define an extern block with the `console.log` function.
 #[wasm_bindgen]
@@ -75,23 +77,23 @@ impl DiagnosticSeverity {
 pub struct DiagnosticSeverityInput(String);
 
 impl FromStr for DiagnosticSeverity {
-    type Err = ();
+  type Err = ();
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Error" => Ok(DiagnosticSeverity::Error),
-            "Warning" => Ok(DiagnosticSeverity::Warning),
-            "Information" => Ok(DiagnosticSeverity::Information),
-            "Hint" => Ok(DiagnosticSeverity::Hint),
-            _ => Err(()),
-        }
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    match s {
+      "Error" => Ok(DiagnosticSeverity::Error),
+      "Warning" => Ok(DiagnosticSeverity::Warning),
+      "Information" => Ok(DiagnosticSeverity::Information),
+      "Hint" => Ok(DiagnosticSeverity::Hint),
+      _ => Err(()),
     }
+  }
 }
 
 impl From<DiagnosticSeverityInput> for DiagnosticSeverity {
-    fn from(input: DiagnosticSeverityInput) -> Self {
-        DiagnosticSeverity::from_str(&input.0).unwrap()
-    }
+  fn from(input: DiagnosticSeverityInput) -> Self {
+    DiagnosticSeverity::from_str(&input.0).unwrap()
+  }
 }
 
 fn get_line_end_byte_pos(cm: &SourceMap, lo_byte_pos: BytePos, hi_byte_pos: BytePos) -> BytePos {
@@ -115,16 +117,16 @@ fn get_line_start_byte_pos(cm: &SourceMap, lo_byte_pos: BytePos, hi_byte_pos: By
   // Split the source into lines and reverse the list to find the newline character from the end (which would be the start of the line)
   let lines = src.lines().rev().collect::<Vec<&str>>();
 
-  if let Some(last_line) = lines.iter().next() {
+  if let Some(last_line) = lines.first() {
     // Calculate the byte position of the start of the line of interest
     let start_pos = last_line.chars().position(|c| c != ' ' && c != '\t');
-    let line_start_byte_pos = if let Some(pos) = start_pos {
+
+    if let Some(pos) = start_pos {
       hi_byte_pos - BytePos((last_line.len() - pos) as u32)
     } else {
       // If there's no content (only whitespace), then we are at the start of the line
       hi_byte_pos - BytePos(last_line.len() as u32)
-    };
-    line_start_byte_pos
+    }
   } else {
     // If there's no newline character, then we are at the start of the file
     BytePos(0)
@@ -158,12 +160,12 @@ pub fn add_diagnostics_for_functions_that_throw(
   for fun in &functions_with_throws {
     let function_start = cm.lookup_char_pos(fun.throw_statement.lo());
     let line_end_byte_pos =
-      get_line_end_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
+      get_line_end_byte_pos(cm, fun.throw_statement.lo(), fun.throw_statement.hi());
 
     let function_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
     let start_character_byte_pos =
-      get_line_start_byte_pos(&cm, fun.throw_statement.lo(), fun.throw_statement.hi());
+      get_line_start_byte_pos(cm, fun.throw_statement.lo(), fun.throw_statement.hi());
     let start_character = cm.lookup_char_pos(start_character_byte_pos);
 
     if debug == Some(true) {
@@ -226,7 +228,7 @@ pub fn add_diagnostics_for_calls_to_throws(
   for call in &calls_to_throws {
     let call_start = cm.lookup_char_pos(call.call_span.lo());
 
-    let line_end_byte_pos = get_line_end_byte_pos(&cm, call.call_span.lo(), call.call_span.hi());
+    let line_end_byte_pos = get_line_end_byte_pos(cm, call.call_span.lo(), call.call_span.hi());
 
     let call_end = cm.lookup_char_pos(line_end_byte_pos - BytePos(1));
 
@@ -320,17 +322,40 @@ pub struct ParseResult {
 }
 
 impl ParseResult {
-  pub fn into(results: AnalysisResult, cm: &SourceMap, debug: Option<bool>, input_data: InputData) -> ParseResult {
+  pub fn into(
+    results: AnalysisResult,
+    cm: &SourceMap,
+    debug: Option<bool>,
+    input_data: InputData,
+  ) -> ParseResult {
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
     add_diagnostics_for_functions_that_throw(
       &mut diagnostics,
       results.functions_with_throws.clone(),
-      &cm,
+      cm,
       debug,
-      DiagnosticSeverity::from(input_data.throw_statement_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string()))), 
-      DiagnosticSeverity::from(input_data.function_throw_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string())))
+      DiagnosticSeverity::from(
+        input_data
+          .throw_statement_severity
+          .unwrap_or(DiagnosticSeverityInput("Hint".to_string())),
+      ),
+      DiagnosticSeverity::from(
+        input_data
+          .function_throw_severity
+          .unwrap_or(DiagnosticSeverityInput("Hint".to_string())),
+      ),
     );
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, results.calls_to_throws, &cm, debug, DiagnosticSeverity::from(input_data.call_to_throw_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string()))));
+    add_diagnostics_for_calls_to_throws(
+      &mut diagnostics,
+      results.calls_to_throws,
+      cm,
+      debug,
+      DiagnosticSeverity::from(
+        input_data
+          .call_to_throw_severity
+          .unwrap_or(DiagnosticSeverityInput("Hint".to_string())),
+      ),
+    );
 
     ParseResult {
       diagnostics,
@@ -342,9 +367,13 @@ impl ParseResult {
       relative_imports: get_relative_imports(results.import_sources.into_iter().collect()),
       imported_identifiers_diagnostics: identifier_usages_vec_to_combined_map(
         results.imported_identifier_usages,
-        &cm,
+        cm,
         debug,
-        DiagnosticSeverity::from(input_data.call_to_imported_throw_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string()))),
+        DiagnosticSeverity::from(
+          input_data
+            .call_to_imported_throw_severity
+            .unwrap_or(DiagnosticSeverityInput("Hint".to_string())),
+        ),
       ),
     }
   }
@@ -406,8 +435,7 @@ pub struct TypeScriptSettings {
   decorators: Option<bool>,
 }
 
-
-#[derive( Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct InputData {
   // TODO - maybe use this in the future
   // uri: String,
@@ -570,7 +598,14 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None, DiagnosticSeverity::Hint, DiagnosticSeverity::Hint);
+    add_diagnostics_for_functions_that_throw(
+      &mut diagnostics,
+      functions_with_throws,
+      &cm,
+      None,
+      DiagnosticSeverity::Hint,
+      DiagnosticSeverity::Hint,
+    );
 
     assert_eq!(diagnostics.len(), 2);
     assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
@@ -607,23 +642,24 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None, DiagnosticSeverity::Hint, DiagnosticSeverity::Hint);
+    add_diagnostics_for_functions_that_throw(
+      &mut diagnostics,
+      functions_with_throws,
+      &cm,
+      None,
+      DiagnosticSeverity::Hint,
+      DiagnosticSeverity::Hint,
+    );
 
     assert_eq!(diagnostics.len(), 3);
 
     assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
     assert_eq!(diagnostics[0].message, "Function that may throw.");
 
-    assert_eq!(
-      diagnostics[1].severity,
-      DiagnosticSeverity::Hint.to_int()
-    );
+    assert_eq!(diagnostics[1].severity, DiagnosticSeverity::Hint.to_int());
     assert_eq!(diagnostics[1].message, "Throw statement.");
 
-    assert_eq!(
-      diagnostics[2].severity,
-      DiagnosticSeverity::Hint.to_int()
-    );
+    assert_eq!(diagnostics[2].severity, DiagnosticSeverity::Hint.to_int());
     assert_eq!(diagnostics[2].message, "Throw statement.");
   }
 
@@ -662,7 +698,13 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None, DiagnosticSeverity::Hint);
+    add_diagnostics_for_calls_to_throws(
+      &mut diagnostics,
+      call_to_throws,
+      &cm,
+      None,
+      DiagnosticSeverity::Hint,
+    );
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
@@ -684,7 +726,13 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None, DiagnosticSeverity::Hint);
+    add_diagnostics_for_calls_to_throws(
+      &mut diagnostics,
+      call_to_throws,
+      &cm,
+      None,
+      DiagnosticSeverity::Hint,
+    );
 
     assert!(diagnostics.is_empty());
   }
@@ -750,58 +798,76 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None, DiagnosticSeverity::Hint);
+    add_diagnostics_for_calls_to_throws(
+      &mut diagnostics,
+      call_to_throws,
+      &cm,
+      None,
+      DiagnosticSeverity::Hint,
+    );
 
     assert_eq!(diagnostics.len(), 2);
   }
 
-	#[test]
-	fn test_identifier_usages_vec_to_combined_map_multiple_usages_same_identifier() {
-			let cm = Lrc::new(SourceMap::default());
-			let source_file = cm.new_source_file(
-					FileName::Custom("test_file".into()),
-					"import {foo} from 'module'; foo(); foo();".into(),
-			);
+  #[test]
+  fn test_identifier_usages_vec_to_combined_map_multiple_usages_same_identifier() {
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "import {foo} from 'module'; foo(); foo();".into(),
+    );
 
-			let first_usage_span = Span::new(
-					source_file.start_pos + BytePos(17),
-					source_file.start_pos + BytePos(20),
-					Default::default(),
-			);
+    let first_usage_span = Span::new(
+      source_file.start_pos + BytePos(17),
+      source_file.start_pos + BytePos(20),
+      Default::default(),
+    );
 
-			let second_usage_span = Span::new(
-					source_file.start_pos + BytePos(22),
-					source_file.start_pos + BytePos(25),
-					Default::default(),
-			);
+    let second_usage_span = Span::new(
+      source_file.start_pos + BytePos(22),
+      source_file.start_pos + BytePos(25),
+      Default::default(),
+    );
 
-			let identifier_usages = HashSet::from([
-					IdentifierUsage {
-							id: "foo".to_string(),
-							usage_span: first_usage_span,
-							identifier_name: "foo".to_string(),
-							usage_context: "import".to_string(),
-					},
-					IdentifierUsage {
-							id: "foo".to_string(),
-							usage_span: second_usage_span,
-							identifier_name: "foo".to_string(),
-							usage_context: "import".to_string(),
-					},
-			]);
+    let identifier_usages = HashSet::from([
+      IdentifierUsage {
+        id: "foo".to_string(),
+        usage_span: first_usage_span,
+        identifier_name: "foo".to_string(),
+        usage_context: "import".to_string(),
+      },
+      IdentifierUsage {
+        id: "foo".to_string(),
+        usage_span: second_usage_span,
+        identifier_name: "foo".to_string(),
+        usage_context: "import".to_string(),
+      },
+    ]);
 
-			let combined_map = identifier_usages_vec_to_combined_map(identifier_usages, &cm, None, DiagnosticSeverity::Hint);
-			
-			assert_eq!(combined_map.len(), 1);
+    let combined_map =
+      identifier_usages_vec_to_combined_map(identifier_usages, &cm, None, DiagnosticSeverity::Hint);
 
-			let foo_diagnostics = &combined_map.get("foo").unwrap().diagnostics;
-			assert_eq!(foo_diagnostics.len(), 2);
+    assert_eq!(combined_map.len(), 1);
 
-			assert_eq!(foo_diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
-			assert_eq!(foo_diagnostics[0].message, "Function imported that may throw.");
-			
-			assert_eq!(foo_diagnostics[1].severity, DiagnosticSeverity::Hint.to_int());
-			assert_eq!(foo_diagnostics[1].message, "Function imported that may throw.");
-			
-	}
+    let foo_diagnostics = &combined_map.get("foo").unwrap().diagnostics;
+    assert_eq!(foo_diagnostics.len(), 2);
+
+    assert_eq!(
+      foo_diagnostics[0].severity,
+      DiagnosticSeverity::Hint.to_int()
+    );
+    assert_eq!(
+      foo_diagnostics[0].message,
+      "Function imported that may throw."
+    );
+
+    assert_eq!(
+      foo_diagnostics[1].severity,
+      DiagnosticSeverity::Hint.to_int()
+    );
+    assert_eq!(
+      foo_diagnostics[1].message,
+      "Function imported that may throw."
+    );
+  }
 }
