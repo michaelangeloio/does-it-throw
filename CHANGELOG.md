@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.5](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.2.4...does-it-throw-vscode-v0.2.5) (2023-11-10)
+
+
+### Bug Fixes
+
+* add coverage for switch statements ([#43](https://github.com/michaelangeloio/does-it-throw/issues/43)) ([99fda18](https://github.com/michaelangeloio/does-it-throw/commit/99fda183a7ca813cbb5f5434f429cd79b594f139))
+* re-organize primary crate into modules ([#42](https://github.com/michaelangeloio/does-it-throw/issues/42)) ([badb106](https://github.com/michaelangeloio/does-it-throw/commit/badb1061d0dfc679458d55609e43cccfdca01794))
+* update details, fix logic in some call expressions, including spread operators ([#40](https://github.com/michaelangeloio/does-it-throw/issues/40)) ([cdfdf47](https://github.com/michaelangeloio/does-it-throw/commit/cdfdf47a2d657364abc1b3b3ce97e89405b842b3))
+* update readme and contributing ([#44](https://github.com/michaelangeloio/does-it-throw/issues/44)) ([cf258cd](https://github.com/michaelangeloio/does-it-throw/commit/cf258cd8baffb9277a8039cdb7416378691d6684))
+
 ## [0.2.4](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.2.3...does-it-throw-vscode-v0.2.4) (2023-11-09)
 
 

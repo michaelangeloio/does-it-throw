@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.11](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.10...does-it-throw-v0.1.11) (2023-11-10)
+
+
+### Bug Fixes
+
+* add coverage for switch statements ([#43](https://github.com/michaelangeloio/does-it-throw/issues/43)) ([99fda18](https://github.com/michaelangeloio/does-it-throw/commit/99fda183a7ca813cbb5f5434f429cd79b594f139))
+* re-organize primary crate into modules ([#42](https://github.com/michaelangeloio/does-it-throw/issues/42)) ([badb106](https://github.com/michaelangeloio/does-it-throw/commit/badb1061d0dfc679458d55609e43cccfdca01794))
+* update details, fix logic in some call expressions, including spread operators ([#40](https://github.com/michaelangeloio/does-it-throw/issues/40)) ([cdfdf47](https://github.com/michaelangeloio/does-it-throw/commit/cdfdf47a2d657364abc1b3b3ce97e89405b842b3))
+
 ## [0.1.10](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.9...does-it-throw-v0.1.10) (2023-11-09)
 
 
