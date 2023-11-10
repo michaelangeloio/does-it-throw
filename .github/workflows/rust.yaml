@@ -17,11 +17,6 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose
 
       - name: Test
         uses: actions-rs/cargo@v1
