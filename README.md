@@ -44,15 +44,22 @@ Untyped `throw` statements can be a pain for those who come from languages like 
 - Currently, it only supports ECMAScript files and the following file types: `.ts`, `.js`, `.tsx` and `.jsx`.
 - Call expression tracing (Aka "Calls to Throws") is now set to one level deep. Hope to make this configurable in the future!
 
+> To view all known limitations, please see the [issues](https://github.com/michaelangeloio/does-it-throw/issues) page.
+
 
 ## Contributing
 Contributions are certainly welcome! Please open an issue or submit a PR. If you find a use case that isn't supported yet, please search the open issues and open a new one if it doesn't exist.
 
+### Dev Setup
+Everything can be found in the [CONTRIBUTING.md](./CONTRIBUTING.md) file!
+
 ## Feedback & Suggestions
 Please use the GitHub discussions tab to provide feedback and suggestions. Thanks!
 
-### Development & Technical Details
-Everything can be found in the [CONTRIBUTING.md](./CONTRIBUTING.md) file!
+## Acknowledgements
+
+- [SWC](https://swc.rs/) - The blazing fast javascript compiler written in Rust.
+- [Oso Vscode Extension](https://github.com/osohq/oso) - For the WASM inspiration. Excellent article [here](https://www.osohq.com/post/building-vs-code-extension-with-rust-wasm-typescript).
 
 ## License
-MIT
+MIT - See [LICENSE](./LICENSE) for more information.
