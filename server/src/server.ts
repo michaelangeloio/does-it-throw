@@ -86,11 +86,12 @@ interface Settings {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: Settings = { maxNumberOfProblems: 1000000,
+const defaultSettings: Settings = {
+  maxNumberOfProblems: 1000000,
   throwStatementSeverity: 'Hint',
   functionThrowSeverity: 'Hint',
   callToThrowSeverity: 'Hint',
-  callToImportedThrowSeverity: 'Hint'
+  callToImportedThrowSeverity: 'Hint',
 }
 // 👆 very unlikely someone will have more than 1 million throw statements, lol
 // if you do, might want to rethink your code?
