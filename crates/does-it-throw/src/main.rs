@@ -594,13 +594,10 @@ mod integration_tests {
     .iter()
     .for_each(|f| assert!(function_names_contains(&imported_identifier_usages, f)));
 
-    println!("Import sources {:?}", result.import_sources);
-
     let import_sources = result.import_sources.into_iter().collect::<Vec<String>>();
     fn import_sources_contains(import_sources: &Vec<String>, import_source: &str) -> bool {
       import_sources.iter().any(|f| f == import_source)
     }
-    println!("Import sources {:?}", import_sources);
     [
       "./something3",
       "path",
@@ -651,9 +648,77 @@ mod integration_tests {
     fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
       calls_to_throws.iter().any(|c| c == call_to_throw)
     }
-    println!("Calls to throws {:?}", calls_to_throws);
     ["SomeClass-someCallToThrow", "SomeClass-someCallToThrow"]
       .iter()
       .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
+  }
+
+  #[test]
+  fn test_switch_statement() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/switchStatement.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let cm: Lrc<SourceMap> = Default::default();
+
+    let (result, _cm) = analyze_code(&sample_code, cm);
+
+    // general result assertions
+    assert_eq!(result.functions_with_throws.len(), 2);
+    assert_eq!(result.calls_to_throws.len(), 2);
+    assert_eq!(result.imported_identifier_usages.len(), 2);
+    assert_eq!(result.import_sources.len(), 1);
+
+    // function names
+    let function_names: Vec<String> = result
+      .functions_with_throws
+      .iter()
+      .map(|f| f.function_or_method_name.clone())
+      .collect();
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+
+    ["someRandomThrow", "createServer"]
+      .iter()
+      .for_each(|f| assert!(function_names_contains(&function_names, f)));
+
+    // calls to throws
+    let calls_to_throws: Vec<String> = result
+      .calls_to_throws
+      .iter()
+      .map(|c| c.id.clone())
+      .collect();
+
+    fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
+      calls_to_throws.iter().any(|c| c == call_to_throw)
+    }
+
+    ["NOT_SET-createServer", "http-<anonymous>"]
+      .iter()
+      .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
+
+    let import_sources = result.import_sources.into_iter().collect::<Vec<String>>();
+    fn import_sources_contains(import_sources: &Vec<String>, import_source: &str) -> bool {
+      import_sources.iter().any(|f| f == import_source)
+    }
+    ["./something"]
+      .iter()
+      .for_each(|f| assert!(import_sources_contains(&import_sources, f)));
+
+    let import_identifiers = result
+      .imported_identifier_usages
+      .into_iter()
+      .map(|i| i.id)
+      .collect::<Vec<String>>();
+    fn import_identifiers_contains(
+      import_identifiers: &Vec<String>,
+      import_identifier: &str,
+    ) -> bool {
+      import_identifiers.iter().any(|f| f == import_identifier)
+    }
+    ["someObjectLiteral-objectLiteralThrow", "NOT_SET-SomeThrow"]
+      .iter()
+      .for_each(|f| assert!(import_identifiers_contains(&import_identifiers, f)));
   }
 }
