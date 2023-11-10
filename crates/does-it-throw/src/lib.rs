@@ -11,7 +11,7 @@ extern crate swc_ecma_visit;
 
 use std::collections::HashSet;
 
-use std::{thread, vec};
+use std::vec;
 
 use self::swc_common::{sync::Lrc, SourceMap};
 use self::swc_ecma_ast::EsVersion;
@@ -77,37 +77,24 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
     current_method_name: None,
   };
   throw_collector.visit_module(&module);
-  let throw_collector_clone_1 = throw_collector.clone();
-  let module_clone_1 = module.clone();
-  let call_collector_thread = thread::spawn(move || {
-    let mut call_collector = CallFinder {
-      functions_with_throws: throw_collector_clone_1.functions_with_throws,
-      calls: HashSet::new(),
-      current_class_name: None,
-      instantiations: HashSet::new(),
-      function_name_stack: vec![],
-      object_property_stack: vec![],
-    };
-    call_collector.visit_module(&module_clone_1);
-    call_collector
-  });
+  let mut call_collector = CallFinder {
+    functions_with_throws: throw_collector.functions_with_throws.clone(),
+    calls: HashSet::new(),
+    current_class_name: None,
+    instantiations: HashSet::new(),
+    function_name_stack: vec![],
+    object_property_stack: vec![],
+  };
+  call_collector.visit_module(&module);
 
-  let throw_collector_clone_2 = throw_collector.clone();
-  let module_clone_2 = module.clone();
-  let import_usages_collector_thread = thread::spawn(move || {
-    let mut import_usages_collector = ImportUsageFinder {
-      imported_identifiers: throw_collector_clone_2.imported_identifiers,
-      imported_identifier_usages: HashSet::new(),
-      current_class_name: None,
-      current_method_name: None,
-      function_name_stack: vec![],
-    };
-    import_usages_collector.visit_module(&module_clone_2);
-    import_usages_collector
-  });
-
-  let call_collector = call_collector_thread.join().unwrap();
-  let import_usages_collector = import_usages_collector_thread.join().unwrap();
+  let mut import_usages_collector = ImportUsageFinder {
+    imported_identifiers: throw_collector.imported_identifiers.clone(),
+    imported_identifier_usages: HashSet::new(),
+    current_class_name: None,
+    current_method_name: None,
+    function_name_stack: vec![],
+  };
+  import_usages_collector.visit_module(&module);
 
   let combined_analyzers = CombinedAnalyzers {
     throw_analyzer: throw_collector,

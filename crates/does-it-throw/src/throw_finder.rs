@@ -110,19 +110,6 @@ pub struct ThrowAnalyzer {
 }
 
 impl ThrowAnalyzer {
-  pub fn clone (&self) -> Self {
-    Self {
-      functions_with_throws: self.functions_with_throws.clone(),
-      json_parse_calls: self.json_parse_calls.clone(),
-      fs_access_calls: self.fs_access_calls.clone(),
-      import_sources: self.import_sources.clone(),
-      imported_identifiers: self.imported_identifiers.clone(),
-      function_name_stack: self.function_name_stack.clone(),
-      current_class_name: self.current_class_name.clone(),
-      current_method_name: self.current_method_name.clone(),
-    }
-  }
-
   fn check_function_for_throws(&mut self, function: &Function) {
     let mut throw_finder = ThrowFinder {
       throw_spans: vec![],
