@@ -7,6 +7,7 @@ extern crate swc_ecma_visit;
 extern crate wasm_bindgen;
 
 use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 
 use self::serde::{Deserialize, Serialize, Serializer};
 use self::swc_common::{sync::Lrc, SourceMap, SourceMapper, Span};
@@ -70,6 +71,29 @@ impl DiagnosticSeverity {
   }
 }
 
+#[derive(Deserialize, Debug)]
+pub struct DiagnosticSeverityInput(String);
+
+impl FromStr for DiagnosticSeverity {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Error" => Ok(DiagnosticSeverity::Error),
+            "Warning" => Ok(DiagnosticSeverity::Warning),
+            "Information" => Ok(DiagnosticSeverity::Information),
+            "Hint" => Ok(DiagnosticSeverity::Hint),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<DiagnosticSeverityInput> for DiagnosticSeverity {
+    fn from(input: DiagnosticSeverityInput) -> Self {
+        DiagnosticSeverity::from_str(&input.0).unwrap()
+    }
+}
+
 fn get_line_end_byte_pos(cm: &SourceMap, lo_byte_pos: BytePos, hi_byte_pos: BytePos) -> BytePos {
   let src = cm
     .span_to_snippet(Span::new(lo_byte_pos, hi_byte_pos, Default::default()))
@@ -128,6 +152,8 @@ pub fn add_diagnostics_for_functions_that_throw(
   functions_with_throws: HashSet<ThrowMap>,
   cm: &SourceMap,
   debug: Option<bool>,
+  throw_statement_severity: DiagnosticSeverity,
+  function_throw_severity: DiagnosticSeverity,
 ) {
   for fun in &functions_with_throws {
     let function_start = cm.lookup_char_pos(fun.throw_statement.lo());
@@ -152,7 +178,7 @@ pub fn add_diagnostics_for_functions_that_throw(
     }
 
     diagnostics.push(Diagnostic {
-      severity: DiagnosticSeverity::Hint.to_int(),
+      severity: function_throw_severity.to_int(),
       range: DiagnosticRange {
         start: DiagnosticPosition {
           line: function_start.line - 1,
@@ -172,7 +198,7 @@ pub fn add_diagnostics_for_functions_that_throw(
       let end = cm.lookup_char_pos(span.hi());
 
       diagnostics.push(Diagnostic {
-        severity: DiagnosticSeverity::Information.to_int(),
+        severity: throw_statement_severity.to_int(),
         range: DiagnosticRange {
           start: DiagnosticPosition {
             line: start.line - 1,
@@ -195,6 +221,7 @@ pub fn add_diagnostics_for_calls_to_throws(
   calls_to_throws: HashSet<CallToThrowMap>,
   cm: &SourceMap,
   debug: Option<bool>,
+  call_to_throw_severity: DiagnosticSeverity,
 ) {
   for call in &calls_to_throws {
     let call_start = cm.lookup_char_pos(call.call_span.lo());
@@ -215,7 +242,7 @@ pub fn add_diagnostics_for_calls_to_throws(
     }
 
     diagnostics.push(Diagnostic {
-      severity: DiagnosticSeverity::Hint.to_int(),
+      severity: call_to_throw_severity.to_int(),
       range: DiagnosticRange {
         start: DiagnosticPosition {
           line: call_start.line - 1,
@@ -238,6 +265,7 @@ pub fn identifier_usages_vec_to_combined_map(
   identifier_usages: HashSet<IdentifierUsage>,
   cm: &SourceMap,
   debug: Option<bool>,
+  call_to_imported_throw_severity: DiagnosticSeverity,
 ) -> HashMap<String, ImportedIdentifiers> {
   let mut identifier_usages_map: HashMap<String, ImportedIdentifiers> = HashMap::new();
   for identifier_usage in identifier_usages {
@@ -265,7 +293,7 @@ pub fn identifier_usages_vec_to_combined_map(
         });
 
     identifier_diagnostics.diagnostics.push(Diagnostic {
-      severity: DiagnosticSeverity::Information.to_int(),
+      severity: call_to_imported_throw_severity.to_int(),
       range: DiagnosticRange {
         start: DiagnosticPosition {
           line: start.line - 1,
@@ -292,15 +320,17 @@ pub struct ParseResult {
 }
 
 impl ParseResult {
-  pub fn into(results: AnalysisResult, cm: &SourceMap, debug: Option<bool>) -> ParseResult {
+  pub fn into(results: AnalysisResult, cm: &SourceMap, debug: Option<bool>, input_data: InputData) -> ParseResult {
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
     add_diagnostics_for_functions_that_throw(
       &mut diagnostics,
       results.functions_with_throws.clone(),
       &cm,
       debug,
+      DiagnosticSeverity::from(input_data.throw_statement_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string()))), 
+      DiagnosticSeverity::from(input_data.function_throw_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string())))
     );
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, results.calls_to_throws, &cm, debug);
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, results.calls_to_throws, &cm, debug, DiagnosticSeverity::from(input_data.call_to_throw_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string()))));
 
     ParseResult {
       diagnostics,
@@ -314,6 +344,7 @@ impl ParseResult {
         results.imported_identifier_usages,
         &cm,
         debug,
+        DiagnosticSeverity::from(input_data.call_to_imported_throw_severity.unwrap_or(DiagnosticSeverityInput("Hint".to_string()))),
       ),
     }
   }
@@ -327,6 +358,11 @@ interface TypeScriptSettings {
 "#;
 
 #[wasm_bindgen(typescript_custom_section)]
+const DiagnosticSeverityInput: &'static str = r#"
+type DiagnosticSeverityInput = "Error" | "Warning" | "Information" | "Hint";
+"#;
+
+#[wasm_bindgen(typescript_custom_section)]
 const InputData: &'static str = r#"
 interface InputData {
 	uri: string;
@@ -334,6 +370,10 @@ interface InputData {
 	typescript_settings?: TypeScriptSettings;
 	ids_to_check: string[];
 	debug?: boolean;
+  throw_statement_severity?: DiagnosticSeverityInput;
+  function_throw_severity?: DiagnosticSeverityInput;
+  call_to_throw_severity?: DiagnosticSeverityInput;
+  call_to_imported_throw_severity?: DiagnosticSeverityInput;
 }
 "#;
 
@@ -366,13 +406,19 @@ pub struct TypeScriptSettings {
   decorators: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize)]
+
+#[derive( Deserialize, Debug)]
 pub struct InputData {
-  uri: String,
+  // TODO - maybe use this in the future
+  // uri: String,
+  // typescript_settings: Option<TypeScriptSettings>,
+  // ids_to_check: Vec<String>,
   file_content: String,
-  typescript_settings: Option<TypeScriptSettings>,
-  ids_to_check: Vec<String>,
   debug: Option<bool>,
+  throw_statement_severity: Option<DiagnosticSeverityInput>,
+  function_throw_severity: Option<DiagnosticSeverityInput>,
+  call_to_throw_severity: Option<DiagnosticSeverityInput>,
+  call_to_imported_throw_severity: Option<DiagnosticSeverityInput>,
 }
 
 #[wasm_bindgen]
@@ -384,7 +430,7 @@ pub fn parse_js(data: JsValue) -> JsValue {
 
   let (results, cm) = analyze_code(&input_data.file_content, cm);
 
-  let parse_result = ParseResult::into(results, &cm, input_data.debug);
+  let parse_result = ParseResult::into(results, &cm, input_data.debug, input_data);
 
   // Convert the diagnostics to a JsValue and return it.
   serde_wasm_bindgen::to_value(&parse_result).unwrap()
@@ -524,7 +570,7 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None);
+    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None, DiagnosticSeverity::Hint, DiagnosticSeverity::Hint);
 
     assert_eq!(diagnostics.len(), 2);
     assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
@@ -561,7 +607,7 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None);
+    add_diagnostics_for_functions_that_throw(&mut diagnostics, functions_with_throws, &cm, None, DiagnosticSeverity::Hint, DiagnosticSeverity::Hint);
 
     assert_eq!(diagnostics.len(), 3);
 
@@ -570,13 +616,13 @@ mod tests {
 
     assert_eq!(
       diagnostics[1].severity,
-      DiagnosticSeverity::Information.to_int()
+      DiagnosticSeverity::Hint.to_int()
     );
     assert_eq!(diagnostics[1].message, "Throw statement.");
 
     assert_eq!(
       diagnostics[2].severity,
-      DiagnosticSeverity::Information.to_int()
+      DiagnosticSeverity::Hint.to_int()
     );
     assert_eq!(diagnostics[2].message, "Throw statement.");
   }
@@ -616,7 +662,7 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None);
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None, DiagnosticSeverity::Hint);
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
@@ -638,7 +684,7 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None);
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None, DiagnosticSeverity::Hint);
 
     assert!(diagnostics.is_empty());
   }
@@ -704,7 +750,7 @@ mod tests {
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None);
+    add_diagnostics_for_calls_to_throws(&mut diagnostics, call_to_throws, &cm, None, DiagnosticSeverity::Hint);
 
     assert_eq!(diagnostics.len(), 2);
   }
@@ -744,17 +790,17 @@ mod tests {
 					},
 			]);
 
-			let combined_map = identifier_usages_vec_to_combined_map(identifier_usages, &cm, None);
+			let combined_map = identifier_usages_vec_to_combined_map(identifier_usages, &cm, None, DiagnosticSeverity::Hint);
 			
 			assert_eq!(combined_map.len(), 1);
 
 			let foo_diagnostics = &combined_map.get("foo").unwrap().diagnostics;
 			assert_eq!(foo_diagnostics.len(), 2);
 
-			assert_eq!(foo_diagnostics[0].severity, DiagnosticSeverity::Information.to_int());
+			assert_eq!(foo_diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
 			assert_eq!(foo_diagnostics[0].message, "Function imported that may throw.");
 			
-			assert_eq!(foo_diagnostics[1].severity, DiagnosticSeverity::Information.to_int());
+			assert_eq!(foo_diagnostics[1].severity, DiagnosticSeverity::Hint.to_int());
 			assert_eq!(foo_diagnostics[1].message, "Function imported that may throw.");
 			
 	}

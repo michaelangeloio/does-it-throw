@@ -14,7 +14,7 @@ pub fn main() {
   for import in result.import_sources.into_iter() {
     println!("Imported {}", import);
   }
-  for fun in result.functions_with_throws.into_iter() {
+  for fun in result.functions_with_throws.clone().into_iter() {
     let start = _cm.lookup_char_pos(fun.throw_statement.lo());
     let end = _cm.lookup_char_pos(fun.throw_statement.hi());
     println!(
@@ -35,6 +35,11 @@ pub fn main() {
       );
     }
   }
+
+  for throw_id in result.functions_with_throws.into_iter() {
+    println!("throw id: {}", throw_id.id);
+  }
+
   println!("------- Calls to throws --------");
   for call in result.calls_to_throws.into_iter() {
     let start = _cm.lookup_char_pos(call.call_span.lo());
@@ -609,5 +614,55 @@ mod integration_tests {
     ]
     .iter()
     .for_each(|f| assert!(import_sources_contains(&import_sources, f)));
+  }
+
+
+  #[test]
+  fn test_spread_expr() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/spreadExpr.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let cm: Lrc<SourceMap> = Default::default();
+
+    let (result, _cm) = analyze_code(&sample_code, cm);
+
+    // general result assertions
+    assert_eq!(result.functions_with_throws.len(), 2);
+    assert_eq!(result.calls_to_throws.len(), 2);
+    assert_eq!(result.imported_identifier_usages.len(), 0);
+    assert_eq!(result.import_sources.len(), 0);
+
+    // function names
+    let function_names: Vec<String> = result
+      .functions_with_throws
+      .iter()
+      .map(|f| f.function_or_method_name.clone())
+      .collect();
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+    [
+      "_contextFromWorkflow", "_contextFromWorkflow"
+    ]
+    .iter()
+    .for_each(|f| assert!(function_names_contains(&function_names, f)));
+
+    // calls to throws
+    let calls_to_throws: Vec<String> = result
+      .calls_to_throws
+      .iter()
+      .map(|c| c.id.clone())
+      .collect();
+
+    fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
+      calls_to_throws.iter().any(|c| c == call_to_throw)
+    }
+    println!("Calls to throws {:?}", calls_to_throws);
+    [
+      "SomeClass-someCallToThrow", "SomeClass-someCallToThrow"
+    ]
+    .iter()
+    .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
   }
 }
