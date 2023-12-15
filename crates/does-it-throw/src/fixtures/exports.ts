@@ -1,7 +1,7 @@
 // @ts-nocheck
 
 type SomeRandomType = {
-	hiKhue: string
+  hiKhue: string
 }
 
 export function hiKhue({ hiKhue }: { hiKhue: string }) {
@@ -13,14 +13,14 @@ export const someConstThatThrows = () => {
 }
 
 const _ConstThatDoesNotThrow = ({
-  someCondition,
+  someCondition
 }: {
   someCondition: {
     hiKhue: string
   }
 }) => {
   console.log('hi khue')
-	someCondition.hiKhue
+  someCondition.hiKhue
 }
 
 const _ConstThatThrows = () => {
@@ -42,9 +42,9 @@ export const callToConstThatThrows2 = () => {
 }
 
 export function callToConstThatThrows3() {
-	const hello: SomeRandomType = {
-		hiKhue: 'hi khue'
-	}
+  const hello: SomeRandomType = {
+    hiKhue: 'hi khue'
+  }
   someConstThatThrows2()
 }
 
