@@ -5,7 +5,7 @@ import {
   ProposedFeatures,
   TextDocumentSyncKind,
   TextDocuments,
-  createConnection,
+  createConnection
 } from 'vscode-languageserver/node'
 
 import { access, constants, readFile } from 'fs/promises'
@@ -16,7 +16,6 @@ import path = require('path')
 const connection = createConnection(ProposedFeatures.all)
 
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
-
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
 // use if needed later
@@ -38,18 +37,18 @@ connection.onInitialize((params: InitializeParams) => {
 
   const result: InitializeResult = {
     capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental,
-    },
-  }
-  if (hasWorkspaceFolderCapability) {
-    result.capabilities.workspace = {
-      workspaceFolders: {
-        supported: false,
-      },
+      textDocumentSync: TextDocumentSyncKind.Incremental
     }
   }
   if (params?.workspaceFolders && params.workspaceFolders.length > 1) {
     throw new Error('This extension only supports one workspace folder at this time')
+  }
+  if (hasWorkspaceFolderCapability) {
+    result.capabilities.workspace = {
+      workspaceFolders: {
+        supported: false
+      }
+    }
   }
   if (!hasWorkspaceFolderCapability) {
     rootUri = params.rootUri
@@ -91,7 +90,7 @@ const defaultSettings: Settings = {
   throwStatementSeverity: 'Hint',
   functionThrowSeverity: 'Hint',
   callToThrowSeverity: 'Hint',
-  callToImportedThrowSeverity: 'Hint',
+  callToImportedThrowSeverity: 'Hint'
 }
 // 👆 very unlikely someone will have more than 1 million throw statements, lol
 // if you do, might want to rethink your code?
@@ -109,18 +108,21 @@ connection.onDidChangeConfiguration((change) => {
   }
 
   // Revalidate all open text documents
+  // biome-ignore lint/complexity/noForEach: <explanation>
   documents.all().forEach(validateTextDocument)
 })
 
 function getDocumentSettings(resource: string): Thenable<Settings> {
   if (!hasConfigurationCapability) {
+    connection.console.log(`does not have config capability, using global settings: ${JSON.stringify(globalSettings)}`)
     return Promise.resolve(globalSettings)
   }
   let result = documentSettings.get(resource)
   if (!result) {
+    connection.console.log(`getting settings for ${resource}`)
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
-      section: 'doesItThrow',
+      section: 'doesItThrow'
     })
     documentSettings.set(resource, result)
   }
@@ -164,19 +166,24 @@ const findFirstFileThatExists = async (uri: string, relative_import: string) => 
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-  const settings = await getDocumentSettings(textDocument.uri)
+  let settings = await getDocumentSettings(textDocument.uri)
+  if (!settings) {
+    // this should never happen, but just in case
+    connection.console.log(`No settings found for ${textDocument.uri}, using defaults`)
+    settings = defaultSettings
+  }
   try {
     const opts = {
       uri: textDocument.uri,
       file_content: textDocument.getText(),
       ids_to_check: [],
       typescript_settings: {
-        decorators: true,
+        decorators: true
       },
       function_throw_severity: settings.functionThrowSeverity,
       throw_statement_severity: settings.throwStatementSeverity,
       call_to_imported_throw_severity: settings.callToImportedThrowSeverity,
-      call_to_throw_severity: settings.callToThrowSeverity,
+      call_to_throw_severity: settings.callToThrowSeverity
     } satisfies InputData
     const analysis = parse_js(opts) as ParseResult
 
@@ -192,7 +199,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             connection.console.log(`Error reading file ${e}`)
             return undefined
           }
-        }),
+        })
       )
       const analysisArr = files.map((file) => {
         if (!file) {
@@ -203,8 +210,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
           file_content: file,
           ids_to_check: [],
           typescript_settings: {
-            decorators: true,
-          },
+            decorators: true
+          }
         } satisfies InputData
         return parse_js(opts) as ParseResult
       })
@@ -213,25 +220,30 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       // We get the get the throw_ids from the imported analysis and then
       // check the original analysis for existing throw_ids
       // This allows to to get the diagnostics from the imported analysis (one level deep for now)
-      analysisArr.forEach((import_analysis) => {
+      for (const import_analysis of analysisArr) {
         if (!import_analysis) {
           return
         }
         if (import_analysis.throw_ids.length) {
-          import_analysis.throw_ids.forEach((throw_id) => {
+          for (const throw_id of import_analysis.throw_ids) {
             const newDiagnostics = analysis.imported_identifiers_diagnostics.get(throw_id)
-            if (newDiagnostics && newDiagnostics?.diagnostics?.length) {
+            if (newDiagnostics?.diagnostics?.length) {
               analysis.diagnostics.push(...newDiagnostics.diagnostics)
             }
-          })
+          }
         }
-      })
+      }
     }
 
-    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: analysis.diagnostics })
+    connection.sendDiagnostics({
+      uri: textDocument.uri,
+      diagnostics: analysis.diagnostics
+    })
   } catch (e) {
     console.log(e)
-    connection.console.log(`${e instanceof Error ? e.message : JSON.stringify(e)} error`)
+    connection.console.log(`Error parsing file ${textDocument.uri}`)
+    connection.console.log(`settings are: ${JSON.stringify(settings)}`)
+    connection.console.log(`Error: ${e instanceof Error ? e.message : JSON.stringify(e)} error`)
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] })
   }
 }
