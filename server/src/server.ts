@@ -26,12 +26,8 @@ let rootUri: string | undefined | null
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities
 
-	hasConfigurationCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.configuration
-	)
-	hasWorkspaceFolderCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.workspaceFolders
-	)
+	hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration)
+	hasWorkspaceFolderCapability = !!(capabilities.workspace && !!capabilities.workspace.workspaceFolders)
 	// use if needed later
 	// hasDiagnosticRelatedInformationCapability = !!(
 	// 	capabilities.textDocument &&
@@ -45,9 +41,7 @@ connection.onInitialize((params: InitializeParams) => {
 		}
 	}
 	if (params?.workspaceFolders && params.workspaceFolders.length > 1) {
-		throw new Error(
-			'This extension only supports one workspace folder at this time'
-		)
+		throw new Error('This extension only supports one workspace folder at this time')
 	}
 	if (hasWorkspaceFolderCapability) {
 		result.capabilities.workspace = {
@@ -68,16 +62,11 @@ connection.onInitialize((params: InitializeParams) => {
 connection.onInitialized(() => {
 	if (hasConfigurationCapability) {
 		// Register for all configuration changes.
-		connection.client.register(
-			DidChangeConfigurationNotification.type,
-			undefined
-		)
+		connection.client.register(DidChangeConfigurationNotification.type, undefined)
 	}
 	if (hasWorkspaceFolderCapability) {
 		connection.workspace.onDidChangeWorkspaceFolders((_event) => {
-			connection.console.log(
-				`Workspace folder change event received. ${JSON.stringify(_event)}`
-			)
+			connection.console.log(`Workspace folder change event received. ${JSON.stringify(_event)}`)
 		})
 	}
 })
@@ -125,11 +114,7 @@ connection.onDidChangeConfiguration((change) => {
 
 function getDocumentSettings(resource: string): Thenable<Settings> {
 	if (!hasConfigurationCapability) {
-		connection.console.log(
-			`does not have config capability, using global settings: ${JSON.stringify(
-				globalSettings
-			)}`
-		)
+		connection.console.log(`does not have config capability, using global settings: ${JSON.stringify(globalSettings)}`)
 		return Promise.resolve(globalSettings)
 	}
 	let result = documentSettings.get(resource)
@@ -168,30 +153,14 @@ const _checkAccessOnFile = async (file: string) => {
 	}
 }
 
-const findFirstFileThatExists = async (
-	uri: string,
-	relative_import: string
-) => {
+const findFirstFileThatExists = async (uri: string, relative_import: string) => {
 	const isTs = uri.endsWith('.ts') || uri.endsWith('.tsx')
-	const baseUri = `${path.resolve(
-		path.dirname(uri.replace('file://', '')),
-		relative_import
-	)}`
+	const baseUri = `${path.resolve(path.dirname(uri.replace('file://', '')), relative_import)}`
 	let files = Array(4)
 	if (isTs) {
-		files = [
-			`${baseUri}.ts`,
-			`${baseUri}.tsx`,
-			`${baseUri}.js`,
-			`${baseUri}.jsx`
-		]
+		files = [`${baseUri}.ts`, `${baseUri}.tsx`, `${baseUri}.js`, `${baseUri}.jsx`]
 	} else {
-		files = [
-			`${baseUri}.js`,
-			`${baseUri}.jsx`,
-			`${baseUri}.ts`,
-			`${baseUri}.tsx`
-		]
+		files = [`${baseUri}.js`, `${baseUri}.jsx`, `${baseUri}.ts`, `${baseUri}.tsx`]
 	}
 	return Promise.any(files.map(_checkAccessOnFile))
 }
@@ -200,9 +169,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	let settings = await getDocumentSettings(textDocument.uri)
 	if (!settings) {
 		// this should never happen, but just in case
-		connection.console.log(
-			`No settings found for ${textDocument.uri}, using defaults`
-		)
+		connection.console.log(`No settings found for ${textDocument.uri}, using defaults`)
 		settings = defaultSettings
 	}
 	try {
@@ -221,11 +188,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		const analysis = parse_js(opts) as ParseResult
 
 		if (analysis.relative_imports.length > 0) {
-			const resolvedImports = analysis.relative_imports.map(
-				(relative_import) => {
-					return findFirstFileThatExists(textDocument.uri, relative_import)
-				}
-			)
+			const resolvedImports = analysis.relative_imports.map((relative_import) => {
+				return findFirstFileThatExists(textDocument.uri, relative_import)
+			})
 			const files = await Promise.all(
 				resolvedImports.map(async (file) => {
 					try {
@@ -261,8 +226,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 				}
 				if (import_analysis.throw_ids.length) {
 					for (const throw_id of import_analysis.throw_ids) {
-						const newDiagnostics =
-							analysis.imported_identifiers_diagnostics.get(throw_id)
+						const newDiagnostics = analysis.imported_identifiers_diagnostics.get(throw_id)
 						if (newDiagnostics?.diagnostics?.length) {
 							analysis.diagnostics.push(...newDiagnostics.diagnostics)
 						}
@@ -279,18 +243,14 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		console.log(e)
 		connection.console.log(`Error parsing file ${textDocument.uri}`)
 		connection.console.log(`settings are: ${JSON.stringify(settings)}`)
-		connection.console.log(
-			`Error: ${e instanceof Error ? e.message : JSON.stringify(e)} error`
-		)
+		connection.console.log(`Error: ${e instanceof Error ? e.message : JSON.stringify(e)} error`)
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] })
 	}
 }
 
 connection.onDidChangeWatchedFiles((_change) => {
 	// Monitored files have change in VSCode
-	connection.console.log(
-		`We received an file change event ${_change}, not implemented yet`
-	)
+	connection.console.log(`We received an file change event ${_change}, not implemented yet`)
 })
 
 // Make the text document manager listen on the connection
