@@ -5,8 +5,6 @@
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": "explicit"
 	},
-	"rust-analyzer.linkedProjects": [
-		"./crates/does-it-throw/Cargo.toml"
-	],
+	"editor.defaultFormatter": "biomejs.biome",
 	"doesItThrow.trace.server": "verbose"
 }

@@ -1,23 +1,8 @@
 {
 	"compilerOptions": {
-		"strict": true,
+		"rootDir": ".",
 		"types": ["bun-types"],
-		"module": "commonjs",
-		"target": "es2021",
-		"lib": ["es2021"],
-		"outDir": "out",
-		"rootDir": "src",
-		"sourceMap": true
+		"strict": true
 	},
-	"include": [
-		"src",
-	],
-	"exclude": [
-		"node_modules",
-		".vscode-test"
-	],
-	"references": [
-		{ "path": "./client" },
-		{ "path": "./server" },
-	]
+	"include": ["build.ts"]
 }
