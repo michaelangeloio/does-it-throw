@@ -12,9 +12,9 @@ class SomeClass {
   }
 }
 
-
 // should work for exported class
-class SomeClass {
+// biome-ignore lint/suspicious/noRedeclare: <explanation>
+export class SomeClass {
   constructor(public x: number) {}
 
   async _contextFromWorkflow() {
