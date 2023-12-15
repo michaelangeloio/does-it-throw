@@ -48,9 +48,6 @@ connection.onInitialize((params: InitializeParams) => {
       },
     }
   }
-  if (params?.workspaceFolders && params.workspaceFolders.length > 1) {
-    throw new Error('This extension only supports one workspace folder at this time')
-  }
   if (!hasWorkspaceFolderCapability) {
     rootUri = params.rootUri
   } else {
@@ -114,10 +111,12 @@ connection.onDidChangeConfiguration((change) => {
 
 function getDocumentSettings(resource: string): Thenable<Settings> {
   if (!hasConfigurationCapability) {
+		connection.console.log(`does not have config capability, using global settings: ${JSON.stringify(globalSettings)}`)
     return Promise.resolve(globalSettings)
   }
   let result = documentSettings.get(resource)
   if (!result) {
+		connection.console.log(`getting settings for ${resource}`)
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
       section: 'doesItThrow',
@@ -164,7 +163,12 @@ const findFirstFileThatExists = async (uri: string, relative_import: string) => 
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-  const settings = await getDocumentSettings(textDocument.uri)
+  let settings = await getDocumentSettings(textDocument.uri)
+	if (!settings) {
+		// this should never happen, but just in case
+		connection.console.log(`No settings found for ${textDocument.uri}, using defaults`)
+		settings = defaultSettings
+	}
   try {
     const opts = {
       uri: textDocument.uri,
@@ -231,7 +235,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: analysis.diagnostics })
   } catch (e) {
     console.log(e)
-    connection.console.log(`${e instanceof Error ? e.message : JSON.stringify(e)} error`)
+		connection.console.log(`Error parsing file ${textDocument.uri}`)
+		connection.console.log(`settings are: ${JSON.stringify(settings)}`)
+    connection.console.log(`Error: ${e instanceof Error ? e.message : JSON.stringify(e)} error`)
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] })
   }
 }
