@@ -2,10 +2,10 @@
 const someCondition = true
 export class Something {
   constructor() {
-		throw new Error('hi khue')
-	}
+    throw new Error('hi khue')
+  }
 
-  someMethodThatThrows({someParam}: {someParam: string}) {
+  someMethodThatThrows({ someParam }: { someParam: string }) {
     throw new Error('hi khue')
   }
 
@@ -13,12 +13,11 @@ export class Something {
     console.log('hi khue')
   }
 
-
-	someMethodThatThrows2({someParam}: {someParam: string}) {
-		if (someParam) {
-			throw new Error('hi khue')
-		}
-	}
+  someMethodThatThrows2({ someParam }: { someParam: string }) {
+    if (someParam) {
+      throw new Error('hi khue')
+    }
+  }
 
   nestedThrow() {
     if (someCondition) {
@@ -38,23 +37,22 @@ export class Something {
   }
 }
 
-
 const _somethingCall = () => {
-	const something = new Something()
-	something.someMethodThatThrows()
+  const something = new Something()
+  something.someMethodThatThrows()
 }
 
 export const somethingCall = () => {
-	const something = new Something()
-	something.someMethodThatThrows()
+  const something = new Something()
+  something.someMethodThatThrows()
 }
 
-function _somethingCall2 () {
-	const something = new Something()
-	something.someMethodThatThrows()
+function _somethingCall2() {
+  const something = new Something()
+  something.someMethodThatThrows()
 }
 
-export function somethingCall2 () {
-	const something = new Something()
-	something.someMethodThatThrows()
+export function somethingCall2() {
+  const something = new Something()
+  something.someMethodThatThrows()
 }
