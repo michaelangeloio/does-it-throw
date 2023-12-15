@@ -154,7 +154,8 @@
     "watch": "bun run --watch build.ts",
     "build": "bun run build.ts",
     "vscode:release": "vsce publish",
-    "vscode:package": "vsce package"
+    "vscode:package": "vsce package",
+    "format": "@biomejs/biome format"
   },
   "types": "index.d.ts",
   "workspaces": [
