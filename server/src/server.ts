@@ -41,6 +41,9 @@ connection.onInitialize((params: InitializeParams) => {
       textDocumentSync: TextDocumentSyncKind.Incremental,
     },
   }
+	if (params?.workspaceFolders && params.workspaceFolders.length > 1) {
+    throw new Error('This extension only supports one workspace folder at this time')
+  }
   if (hasWorkspaceFolderCapability) {
     result.capabilities.workspace = {
       workspaceFolders: {
