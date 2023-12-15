@@ -1,28 +1,29 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.4.0/schema.json",
-	"organizeImports": {
-		"enabled": true
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"suspicious": {
-				"noExplicitAny": "warn"
-			}
-		}
-	},
-	"formatter": {
+  "$schema": "https://biomejs.dev/schemas/1.4.0/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "warn"
+      }
+    },
+    "ignore": ["node_modules/**/*", "server/out", "client/out", "crates/does-it-throw/src/fixtures/**/*" ]
+  },
+  "formatter": {
     "indentStyle": "space",
-		"indentWidth": 2,
-		"lineWidth": 120,
-		"enabled": true
-	},
-	"javascript": {
-		"formatter": {
-			"semicolons": "asNeeded",
-			"quoteStyle": "single",
-			"trailingComma": "none"
-		}
-	}
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "enabled": true
+  },
+  "javascript": {
+    "formatter": {
+      "semicolons": "asNeeded",
+      "quoteStyle": "single",
+      "trailingComma": "none"
+    }
+  }
 }

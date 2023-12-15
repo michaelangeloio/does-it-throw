@@ -7,10 +7,7 @@
     {
       "type": "linked-versions",
       "groupName": "does-it-throw-rust",
-      "components": [
-        "crates/does-it-throw",
-        "crates/does-it-throw-wasm"
-      ]
+      "components": ["crates/does-it-throw", "crates/does-it-throw-wasm"]
     }
   ],
   "packages": {

@@ -1,8 +1,8 @@
 {
-	"compilerOptions": {
-		"rootDir": ".",
-		"types": ["bun-types"],
-		"strict": true
-	},
-	"include": ["build.ts"]
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["bun-types"],
+    "strict": true
+  },
+  "include": ["build.ts"]
 }
