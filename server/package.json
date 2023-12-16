@@ -17,14 +17,32 @@
     "node": "*"
   },
   "repository": "https://github.com/michaelangeloio/does-it-throw",
-  "categories": ["Programming Languages", "Linters", "Debuggers"],
-  "keywords": ["does it throw", "throw finder", "throw", "javascript", "typescript", "lsp", "language server"],
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Debuggers"
+  ],
+  "keywords": [
+    "does it throw",
+    "throw finder",
+    "throw",
+    "javascript",
+    "typescript",
+    "lsp",
+    "language server"
+  ],
   "qna": "https://github.com/michaelangeloio/does-it-throw/discussions",
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.8"
   },
-  "files": ["out", "package.json", "README.md", "LICENSE.txt", "bin"],
+  "files": [
+    "out",
+    "package.json",
+    "README.md",
+    "LICENSE.txt",
+    "bin"
+  ],
   "main": "out/server.js",
   "bin": {
     "does-it-throw-lsp": "./bin/does-it-throw"
