@@ -1,19 +1,33 @@
 {
-  "name": "vscode-does-it-throw-server",
-  "description": "Example implementation of a language server in node.",
-  "version": "0.1.6",
-  "author": "Microsoft Corporation",
+  "name": "does-it-throw-lsp",
+  "description": "Language Server for Does It Throw",
+  "version": "0.1.9",
+  "author": {
+    "name": "Michael Angelo",
+    "email": "email@michaelangelo.io"
+  },
   "license": "MIT",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/michaelangeloio/does-it-throw/blob/main/LICENSE"
+    }
+  ],
   "engines": {
     "node": "*"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Microsoft/vscode-extension-samples"
-  },
+  "repository": "https://github.com/michaelangeloio/does-it-throw",
+  "categories": ["Programming Languages", "Linters", "Debuggers"],
+  "keywords": ["does it throw", "throw finder", "throw", "javascript", "typescript", "lsp", "language server"],
+  "qna": "https://github.com/michaelangeloio/does-it-throw/discussions",
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.8"
+  },
+  "files": ["out", "package.json", "README.md", "LICENSE.txt", "bin"],
+  "main": "out/server.js",
+  "bin": {
+    "does-it-throw-lsp": "./bin/does-it-throw"
   },
   "scripts": {}
 }

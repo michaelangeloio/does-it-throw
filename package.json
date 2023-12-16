@@ -119,7 +119,9 @@
     "build": "bun run build.ts",
     "vscode:release": "vsce publish",
     "vscode:package": "vsce package",
-    "format": "biome format ."
+    "format": "biome format .",
+    "pack:server": "cp README.md server/README.md && cp LICENSE.txt server/LICENSE.txt && npm pack --workspace server",
+    "publish:server": "npm publish --workspace server"
   },
   "types": "index.d.ts",
   "workspaces": ["client", "server"]

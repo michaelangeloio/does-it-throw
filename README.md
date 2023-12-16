@@ -1,7 +1,11 @@
 <p align="center">
-<img src ="https://github.com/michaelangeloio/does-it-throw/blob/main/assets/icon-small.png?raw=true" width='400'>
+<img src ="https://github.com/michaelangeloio/does-it-throw/blob/main/assets/icon-small.png?raw=true" width='350'>
 </p>
 
+<p align="center">
+  <img src="https://github.com/michaelangeloio/does-it-throw/actions/workflows/rust.yaml/badge.svg" alt="Rust Build Status">
+  <img src="https://github.com/michaelangeloio/does-it-throw/actions/workflows/ts.yaml/badge.svg" alt="TypeScript Build Status">
+</p>
 
 # Well, Does it Throw? 
 
@@ -10,11 +14,11 @@ TLDR; This is a *blazingly* fast **lsp server** to find *throw statements* in yo
 
 ### Check it out in action:
 
-![demo](./assets/basic-throw.gif)
+![demo](https://github.com/michaelangeloio/does-it-throw/blob/main/assets/basic-throw.gif)
 
 Also supports **call expressions**:
 
-![demo](./assets/calltothrow.gif)
+![demo](https://github.com/michaelangeloio/does-it-throw/blob/main/assets/calltothrow.gif)
 
 
 ## Why?
@@ -51,7 +55,7 @@ Untyped `throw` statements can be a pain for those who come from languages like 
 Contributions are certainly welcome! Please open an issue or submit a PR. If you find a use case that isn't supported yet, please search the open issues and open a new one if it doesn't exist.
 
 ### Dev Setup
-Everything can be found in the [CONTRIBUTING.md](./CONTRIBUTING.md) file!
+Everything can be found in the [CONTRIBUTING.md](https://github.com/michaelangeloio/does-it-throw/blob/main/CONTRIBUTING.md) file!
 
 ## Feedback & Suggestions
 Please use the GitHub discussions tab to provide feedback and suggestions. Thanks!
@@ -62,4 +66,4 @@ Please use the GitHub discussions tab to provide feedback and suggestions. Thank
 - [Oso Vscode Extension](https://github.com/osohq/oso) - For the WASM inspiration. Excellent article [here](https://www.osohq.com/post/building-vs-code-extension-with-rust-wasm-typescript).
 
 ## License
-MIT - See [LICENSE](./LICENSE) for more information.
+MIT - See [LICENSE](https://github.com/michaelangeloio/does-it-throw/blob/main/LICENSE.txt) for more information.
