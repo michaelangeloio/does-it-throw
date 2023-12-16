@@ -32,6 +32,14 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 ```
+## Starting the Server
+
+You can start the server manually by running the following command:
+```bash
+does-it-throw-lsp --stdio
+```
+
+### Lua Setup (cont'd)
 
 Tell Neovim to use the LSP server:
 ```lua
