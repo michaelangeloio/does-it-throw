@@ -14,6 +14,9 @@
     ".": {
       "release-type": "node"
     },
+    "server": {
+      "release-type": "node"
+    },
     "crates/does-it-throw": {
       "release-type": "rust"
     },
