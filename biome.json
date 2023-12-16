@@ -11,7 +11,12 @@
         "noExplicitAny": "warn"
       }
     },
-    "ignore": ["node_modules/**/*", "server/out", "client/out", "crates/does-it-throw/src/fixtures/**/*" ]
+    "ignore": [
+      "node_modules/**/*",
+      "server/out",
+      "client/out",
+      "crates/does-it-throw/src/fixtures/**/*"
+    ]
   },
   "formatter": {
     "indentStyle": "space",
