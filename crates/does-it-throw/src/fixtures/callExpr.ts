@@ -1,13 +1,12 @@
 // @ts-nocheck
 const connection = {}
 
-
 const SomeThrow = () => {
-	throw new Error('hi khue')
+  throw new Error('hi khue')
 }
 
 function SomeThrow2() {
-	throw new Error('hi khue')
+  throw new Error('hi khue')
 }
 
 connection.onInitialized(() => {
@@ -21,24 +20,22 @@ connection.onInitialized(() => {
     })
   }
   SomeThrow()
-	SomeThrow2()
+  SomeThrow2()
 })
-
 
 connection.onInitialized2(() => {
-	throw new Error('hi khue')
+  throw new Error('hi khue')
 })
 
-
 SomeRandomCall(() => {
-	throw new Error('hi khue')
+  throw new Error('hi khue')
 })
 
 SomeRandomCall2(() => {
-	SomeThrow()
-	SomeThrow2()
+  SomeThrow()
+  SomeThrow2()
 })
 
 connection.oneWithASecondArg({}, () => {
-	throw new Error('hi khue')
+  throw new Error('hi khue')
 })

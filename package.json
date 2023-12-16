@@ -1,165 +1,126 @@
 {
-	"name": "does-it-throw-vscode",
-	"version": "0.2.5",
-	"main": "./client/out/extension.js",
-	"displayName": "Does It Throw?",
-	"description": "easily find throw statements in your JS, TS, and JSX files!",
-	"repository": {
-		"url": "https://github.com/michaelangeloio/does-it-throw"
-	},
-	"icon": "assets/icon-small.png",
-	"author": {
-		"name": "Michael Angelo",
-		"email": "email@michaelangelo.io"
-	},
-	"categories": [
-		"Programming Languages",
-		"Linters",
-		"Debuggers"
-	],
-	"keywords": [
-		"does it throw",
-		"throw finder",
-		"throw",
-		"javascript",
-		"typescript"
-	],
-	"galleryBanner": {
-		"color": "#050b1f",
-		"theme": "dark"
-	},
-	"badges": [
-		{
-			"url": "https://github.com/michaelangeloio/does-it-throw/actions/workflows/rust.yaml/badge.svg",
-			"href": "https://github.com/michaelangeloio/does-it-throw",
-			"description": "Rust Build Status"
-		},
-		{
-			"url": "https://github.com/michaelangeloio/does-it-throw/actions/workflows/ts.yaml/badge.svg",
-			"href": "https://github.com/michaelangeloio/does-it-throw",
-			"description": "Node/Bun Build Status"
-		}
-	],
-	"qna": "https://github.com/michaelangeloio/does-it-throw/discussions",
-	"licenses": [
-		{
-			"type": "MIT",
-			"url": "https://github.com/michaelangeloio/does-it-throw/blob/main/LICENSE"
-		}
-	],
-	"devDependencies": {
-		"@types/mocha": "^9.1.0",
-		"@types/node": "^16.18.34",
-		"@typescript-eslint/eslint-plugin": "^6.9.1",
-		"@typescript-eslint/parser": "^6.9.1",
-		"@vscode/vsce": "^2.22.0",
-		"bun-types": "^1.0.7",
-		"chokidar": "^3.5.3",
-		"esbuild": "^0.19.5",
-		"esbuild-plugin-copy": "^2.1.1",
-		"eslint": "^8.35.0",
-		"mocha": "^9.2.1",
-		"semver": "^7.5.4",
-		"toml": "^3.0.0",
-		"tsx": "^3.14.0",
-		"typescript": "5.2.2",
-		"user-home": "^3.0.0"
-	},
-	"activationEvents": [
-		"onLanguage:typescript",
-		"onLanguage:typescriptreact",
-		"onLanguage:javascript",
-		"onLanguage:javascriptreact"
-	],
-	"contributes": {
-		"configuration": {
-			"type": "object",
-			"title": "Example configuration",
-			"properties": {
-				"doesItThrow.throwStatementSeverity": {
-					"scope": "resource",
-					"type": "string",
-					"enum": [
-						"Error",
-						"Warning",
-						"Information",
-						"Hint"
-					],
-					"default": "Hint",
-					"description": "Controls the severity level (underline) of a throw statement."
-				},
-				"doesItThrow.functionThrowSeverity": {
-					"scope": "resource",
-					"type": "string",
-					"enum": [
-						"Error",
-						"Warning",
-						"Information",
-						"Hint"
-					],
-					"default": "Hint",
-					"description": "Controls the severity level (underline) of a function/const that throws."
-				},
-				"doesItThrow.callToThrowSeverity": {
-					"scope": "resource",
-					"type": "string",
-					"enum": [
-						"Error",
-						"Warning",
-						"Information",
-						"Hint"
-					],
-					"default": "Hint",
-					"description": "Controls the severity level (underline) of a function/const that calls a function that throws in the same file."
-				},
-				"doesItThrow.callToImportedThrowSeverity": {
-					"scope": "resource",
-					"type": "string",
-					"enum": [
-						"Error",
-						"Warning",
-						"Information",
-						"Hint"
-					],
-					"default": "Hint",
-					"description": "Controls the severity level (underline) of a function/const that calls a function that throws in a different file."
-				},
-				"doesItThrow.maxNumberOfProblems": {
-					"scope": "resource",
-					"type": "number",
-					"default": 100,
-					"description": "Controls the maximum number of problems produced by the server."
-				},
-				"doesItThrow.trace.server": {
-					"scope": "window",
-					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Enable for debug mode. Traces the communication between VS Code and the language server."
-				}
-			}
-		}
-	},
-	"engines": {
-		"vscode": "^1.75.0"
-	},
-	"license": "MIT",
-	"publisher": "michaelangeloio",
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "bun run build.ts",
-		"watch": "bun run --watch build.ts",
-		"build": "bun run build.ts",
-		"vscode:release": "vsce publish",
-		"vscode:package": "vsce package"
-	},
-	"types": "index.d.ts",
-	"workspaces": [
-		"client",
-		"server"
-	]
+  "name": "does-it-throw-vscode",
+  "version": "0.2.5",
+  "main": "./client/out/extension.js",
+  "displayName": "Does It Throw?",
+  "description": "easily find throw statements in your JS, TS, and JSX files!",
+  "repository": {
+    "url": "https://github.com/michaelangeloio/does-it-throw"
+  },
+  "icon": "assets/icon-small.png",
+  "author": {
+    "name": "Michael Angelo",
+    "email": "email@michaelangelo.io"
+  },
+  "categories": ["Programming Languages", "Linters", "Debuggers"],
+  "keywords": ["does it throw", "throw finder", "throw", "javascript", "typescript"],
+  "galleryBanner": {
+    "color": "#050b1f",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://github.com/michaelangeloio/does-it-throw/actions/workflows/rust.yaml/badge.svg",
+      "href": "https://github.com/michaelangeloio/does-it-throw",
+      "description": "Rust Build Status"
+    },
+    {
+      "url": "https://github.com/michaelangeloio/does-it-throw/actions/workflows/ts.yaml/badge.svg",
+      "href": "https://github.com/michaelangeloio/does-it-throw",
+      "description": "Node/Bun Build Status"
+    }
+  ],
+  "qna": "https://github.com/michaelangeloio/does-it-throw/discussions",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/michaelangeloio/does-it-throw/blob/main/LICENSE"
+    }
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "1.4.1",
+    "@types/node": "^16.18.34",
+    "@vscode/vsce": "^2.22.0",
+    "bun-types": "^1.0.18",
+    "chokidar": "^3.5.3",
+    "esbuild": "^0.19.5",
+    "esbuild-plugin-copy": "^2.1.1",
+    "eslint": "^8.35.0",
+    "semver": "^7.5.4",
+    "toml": "^3.0.0",
+    "tsx": "^3.14.0",
+    "typescript": "5.2.2",
+    "user-home": "^3.0.0"
+  },
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact"
+  ],
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Example configuration",
+      "properties": {
+        "doesItThrow.throwStatementSeverity": {
+          "scope": "resource",
+          "type": "string",
+          "enum": ["Error", "Warning", "Information", "Hint"],
+          "default": "Hint",
+          "description": "Controls the severity level (underline) of a throw statement."
+        },
+        "doesItThrow.functionThrowSeverity": {
+          "scope": "resource",
+          "type": "string",
+          "enum": ["Error", "Warning", "Information", "Hint"],
+          "default": "Hint",
+          "description": "Controls the severity level (underline) of a function/const that throws."
+        },
+        "doesItThrow.callToThrowSeverity": {
+          "scope": "resource",
+          "type": "string",
+          "enum": ["Error", "Warning", "Information", "Hint"],
+          "default": "Hint",
+          "description": "Controls the severity level (underline) of a function/const that calls a function that throws in the same file."
+        },
+        "doesItThrow.callToImportedThrowSeverity": {
+          "scope": "resource",
+          "type": "string",
+          "enum": ["Error", "Warning", "Information", "Hint"],
+          "default": "Hint",
+          "description": "Controls the severity level (underline) of a function/const that calls a function that throws in a different file."
+        },
+        "doesItThrow.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 100,
+          "description": "Controls the maximum number of problems produced by the server."
+        },
+        "doesItThrow.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Enable for debug mode. Traces the communication between VS Code and the language server."
+        }
+      }
+    }
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "license": "MIT",
+  "publisher": "michaelangeloio",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "bun run build.ts",
+    "watch": "bun run build.ts --watch",
+    "build": "bun run build.ts",
+    "vscode:release": "vsce publish",
+    "vscode:package": "vsce package",
+    "format": "biome format ."
+  },
+  "types": "index.d.ts",
+  "workspaces": ["client", "server"]
 }
