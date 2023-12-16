@@ -154,13 +154,14 @@ const compile = async ({
   }
 
   /**
-   * Build everything in parallel
+   * Build everything in parallel after wasm
    */
-
-  const result = await compileWasm()
-  if (result.isError) {
-    errors.push(result)
-    return errors
+  if (path.includes('.rs') || init) {
+    const result = await compileWasm()
+    if (result.isError) {
+      errors.push(result)
+      return errors
+    }
   }
 
   errors.push(...(await Promise.all([compileClient(), compileServer(), typeCheck('server'), typeCheck('client')])))
@@ -168,7 +169,7 @@ const compile = async ({
 }
 
 async function main() {
-  const isWatch = process.execArgv.find((arg) => arg.includes('watch'))
+  const isWatch = process.argv.includes('--watch')
   if (!isWatch) {
     log('not in watch mode, compiling once')
     const errors = await compile({
@@ -187,22 +188,24 @@ async function main() {
     return
   }
 
+  await compile({
+    init: true,
+    ready: true,
+    path: ''
+  })
+
   const watcher = watch('**/*.{ts,rs}', {
-    ignored: '(node_modules|target)/**/*'
+    ignored: ['(node_modules|target)/**/*', 'server/out/**/*', 'client/out/**/*']
   })
   let ready = false
 
   watcher.on('ready', async () => {
     log('ready')
     ready = true
-    await compile({
-      init: true,
-      ready,
-      path: ''
-    })
   })
 
   watcher.on('change', async (path) => {
+    log('change', path)
     await compile({
       init: false,
       path,
