@@ -1,6 +1,6 @@
 {
-  "crates/does-it-throw": "0.1.11",
-  "crates/does-it-throw-wasm": "0.1.11",
-  ".": "0.2.5",
-  "server": "0.2.5"
+  "crates/does-it-throw": "0.1.12",
+  "crates/does-it-throw-wasm": "0.1.12",
+  ".": "0.3.0",
+  "server": "0.3.0"
 }

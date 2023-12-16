@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.12](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.11...does-it-throw-v0.1.12) (2023-12-16)
+
+
+### Bug Fixes
+
+* add biome for standardization, ensure the builder reports errors correctly ([#72](https://github.com/michaelangeloio/does-it-throw/issues/72)) ([0d18392](https://github.com/michaelangeloio/does-it-throw/commit/0d18392268516abb79d015f90495dd331e7ef998))
+* results should still show even if file cannot resolve (calls to throws) ([#76](https://github.com/michaelangeloio/does-it-throw/issues/76)) ([f908556](https://github.com/michaelangeloio/does-it-throw/commit/f908556dfda8eca9195c87269fac71bc6d3e8bf9))
+
 ## [0.1.11](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.10...does-it-throw-v0.1.11) (2023-11-10)
 
 
