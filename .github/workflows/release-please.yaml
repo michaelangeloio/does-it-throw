@@ -51,4 +51,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.VSIX_DISPATCH_TOKEN }}
 
-
+      - name: Trigger NPM Publish Release
+        if: ${{ steps.release.outputs.release_created }}
+        run: gh workflow run release-npm.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.NPM_DISPATCH_TOKEN }}
+    

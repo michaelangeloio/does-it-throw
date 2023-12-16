@@ -1,7 +1,7 @@
 {
   "name": "does-it-throw-lsp",
   "description": "Language Server for Does It Throw",
-  "version": "0.1.9",
+  "version": "0.2.5",
   "author": {
     "name": "Michael Angelo",
     "email": "email@michaelangelo.io"
