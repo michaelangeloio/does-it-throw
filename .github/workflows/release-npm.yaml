@@ -46,4 +46,4 @@ jobs:
       - name: Publish Language Server
         run: bun run publish:server
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_LSP_SERVER_TOKEN }}
