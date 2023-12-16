@@ -1,12 +1,24 @@
 {
-	"editor.insertSpaces": false,
+  "editor.tabSize": 2,
 	"typescript.tsc.autoDetect": "off",
 	"typescript.preferences.quoteStyle": "single",
 	"editor.codeActionsOnSave": {
-		"source.fixAll.eslint": true
+		"source.fixAll.eslint": "explicit"
 	},
-	"rust-analyzer.linkedProjects": [
-		"./crates/does-it-throw/Cargo.toml"
-	],
+  "[json]": { 
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
 	"doesItThrow.trace.server": "verbose"
 }
