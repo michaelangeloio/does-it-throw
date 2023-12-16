@@ -115,7 +115,7 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "bun run build.ts",
-    "watch": "bun run build.ts --watch",
+    "watch": "bun run --watch build.ts",
     "build": "bun run build.ts",
     "vscode:release": "vsce publish",
     "vscode:package": "vsce package",

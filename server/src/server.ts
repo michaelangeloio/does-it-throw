@@ -12,7 +12,6 @@ import { access, constants, readFile } from 'fs/promises'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { InputData, ParseResult, parse_js } from './rust/does_it_throw_wasm'
 import path = require('path')
-import { inspect } from 'util'
 
 const connection = createConnection(ProposedFeatures.all)
 
@@ -115,11 +114,12 @@ connection.onDidChangeConfiguration((change) => {
 
 function getDocumentSettings(resource: string): Thenable<Settings> {
   if (!hasConfigurationCapability) {
-    connection.console.info(`does not have config capability, using global settings: ${JSON.stringify(globalSettings)}`)
+    connection.console.log(`does not have config capability, using global settings: ${JSON.stringify(globalSettings)}`)
     return Promise.resolve(globalSettings)
   }
   let result = documentSettings.get(resource)
   if (!result) {
+    connection.console.log(`getting settings for ${resource}`)
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
       section: 'doesItThrow'
@@ -169,7 +169,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   let settings = await getDocumentSettings(textDocument.uri)
   if (!settings) {
     // this should never happen, but just in case
-    connection.console.warn(`No settings found for ${textDocument.uri}, using defaults`)
+    connection.console.log(`No settings found for ${textDocument.uri}, using defaults`)
     settings = defaultSettings
   }
   try {
@@ -188,16 +188,19 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     const analysis = parse_js(opts) as ParseResult
 
     if (analysis.relative_imports.length > 0) {
-      const filePromises = analysis.relative_imports.map(async (relative_import) => {
-        try {
-          const file = await findFirstFileThatExists(textDocument.uri, relative_import)
-          return await readFile(file, 'utf-8')
-        } catch (e) {
-          connection.console.log(`Error reading file ${inspect(e)}`)
-          return undefined
-        }
+      const resolvedImports = analysis.relative_imports.map((relative_import) => {
+        return findFirstFileThatExists(textDocument.uri, relative_import)
       })
-      const files = (await Promise.all(filePromises)).filter((file) => !!file)
+      const files = await Promise.all(
+        resolvedImports.map(async (file) => {
+          try {
+            return readFile(await file, 'utf-8')
+          } catch (e) {
+            connection.console.log(`Error reading file ${e}`)
+            return undefined
+          }
+        })
+      )
       const analysisArr = files.map((file) => {
         if (!file) {
           return undefined
@@ -231,15 +234,16 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         }
       }
     }
+
     connection.sendDiagnostics({
       uri: textDocument.uri,
       diagnostics: analysis.diagnostics
     })
   } catch (e) {
     console.log(e)
-    connection.console.error(`Error parsing file ${textDocument.uri}`)
-    connection.console.error(`settings are: ${JSON.stringify(settings)}`)
-    connection.console.error(`Error: ${e instanceof Error ? e.message : JSON.stringify(e)} error`)
+    connection.console.log(`Error parsing file ${textDocument.uri}`)
+    connection.console.log(`settings are: ${JSON.stringify(settings)}`)
+    connection.console.log(`Error: ${e instanceof Error ? e.message : JSON.stringify(e)} error`)
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] })
   }
 }
