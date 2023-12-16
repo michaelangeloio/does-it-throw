@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.12](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-wasm-v0.1.11...does-it-throw-wasm-v0.1.12) (2023-12-16)
+
+
+### Bug Fixes
+
+* bump swc_ecma_ast to 0.110.9 ([#75](https://github.com/michaelangeloio/does-it-throw/issues/75)) ([0aa2e91](https://github.com/michaelangeloio/does-it-throw/commit/0aa2e91f4f1c0b9e352d052382c5a7f436cffeb9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * does-it-throw bumped from 0.1.11 to 0.1.12
+
 ## [0.1.11](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-wasm-v0.1.10...does-it-throw-wasm-v0.1.11) (2023-11-10)
 
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.2.5...does-it-throw-vscode-v0.3.0) (2023-12-16)
+
+
+### Features
+
+* **deps:** bump vscode-languageclient from 8.1.0 to 9.0.1 ([#49](https://github.com/michaelangeloio/does-it-throw/issues/49)) ([b36a86b](https://github.com/michaelangeloio/does-it-throw/commit/b36a86b22757568dbfa82817d06956e5a15e0f65))
+* neovim support ([#78](https://github.com/michaelangeloio/does-it-throw/issues/78)) ([6152786](https://github.com/michaelangeloio/does-it-throw/commit/61527869e70f54e99616375f7efd53b24e0fa01a))
+* neovim/language server docs ([#80](https://github.com/michaelangeloio/does-it-throw/issues/80)) ([a00d92a](https://github.com/michaelangeloio/does-it-throw/commit/a00d92a3b13252025495dc811b21f84df3a38201))
+
+
+### Bug Fixes
+
+* add biome for standardization, ensure the builder reports errors correctly ([#72](https://github.com/michaelangeloio/does-it-throw/issues/72)) ([0d18392](https://github.com/michaelangeloio/does-it-throw/commit/0d18392268516abb79d015f90495dd331e7ef998))
+* bump swc_ecma_ast to 0.110.9 ([#75](https://github.com/michaelangeloio/does-it-throw/issues/75)) ([0aa2e91](https://github.com/michaelangeloio/does-it-throw/commit/0aa2e91f4f1c0b9e352d052382c5a7f436cffeb9))
+* remove unused eslint ([#74](https://github.com/michaelangeloio/does-it-throw/issues/74)) ([58ef6ae](https://github.com/michaelangeloio/does-it-throw/commit/58ef6aea9d4334eb0c42901c826ba69157994f77))
+* results should still show even if file cannot resolve (calls to throws) ([#76](https://github.com/michaelangeloio/does-it-throw/issues/76)) ([f908556](https://github.com/michaelangeloio/does-it-throw/commit/f908556dfda8eca9195c87269fac71bc6d3e8bf9))
+
 ## [0.2.5](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.2.4...does-it-throw-vscode-v0.2.5) (2023-11-10)
 
 
