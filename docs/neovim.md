@@ -53,8 +53,7 @@ local server_config = {
 if not lsp_configurations.does_it_throw_server then
     lsp_configurations.does_it_throw_server = {
         default_config = {
-            cmd = {"node", "/Users/angelo/developer/does-it-throw-vscode-0.2.5/extension/server/out/server.js",
-                   "--stdio"},
+            cmd = {"does-it-throw-lsp", "--stdio"},
             filetypes = {"typescript", "javascript"},
             root_dir = function(fname)
                 return vim.fn.getcwd()
