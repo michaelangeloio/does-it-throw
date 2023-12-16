@@ -15,7 +15,7 @@ crate-type = ["cdylib"]
 [dependencies]
 does-it-throw = { path = "../does-it-throw", version = "0.1.11"}
 swc_common = "0.33"
-swc_ecma_parser = "0.141.3"
+swc_ecma_parser = "0.141.15"
 swc_ecma_ast = "0.110.0"
 swc_ecma_visit = "0.96"
 wasm-bindgen = {version = "0.2.74"}
