@@ -34,8 +34,10 @@ Untyped `throw` statements can be a pain for those who come from languages like 
 
 | Platform | Installation |
 | -------- | ------------ |
-| VsCode  | via [Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelangeloio.does-it-throw-vscode) |
-| NeoVim	| Coming soon... |
+| VsCode  | [Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelangeloio.does-it-throw-vscode) |
+| Neovim	| [Neovim Installation Docs](https://github.com/michaelangeloio/does-it-throw/blob/main/docs/neovim.md) |
+| LSP Server | [NPM](https://www.npmjs.com/package/does-it-throw-lsp) |
+| JetBrains | Coming soon... |
 
 > This extension is built with security in mind. It doesn't send any data to any third party servers. All publishes are done via a signed immutable commit from the [CI pipeline](https://github.com/michaelangeloio/does-it-throw/blob/update-details/.github/workflows/release-please.yaml).
 
