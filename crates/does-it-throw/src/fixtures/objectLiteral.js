@@ -5,8 +5,8 @@ export const someObjectLiteral = {
   nestedObjectLiteral: {
     nestedObjectLiteralThrow: () => {
       throw new Error('hi khue')
-    },
-  },
+    }
+  }
 }
 
 export const SomeObject = {
@@ -20,10 +20,10 @@ export function callToLiteral() {
 }
 
 export const callToLiteral2 = () => {
-	someObjectLiteral.objectLiteralThrow()
+  someObjectLiteral.objectLiteralThrow()
 }
 
 export const callToLiteral3 = () => {
-	someObjectLiteral.nestedObjectLiteral.nestedObjectLiteralThrow()
-	SomeObject.someExampleThrow()
+  someObjectLiteral.nestedObjectLiteral.nestedObjectLiteralThrow()
+  SomeObject.someExampleThrow()
 }

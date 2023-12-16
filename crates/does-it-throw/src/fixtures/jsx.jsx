@@ -2,7 +2,7 @@ export const someThrow = () => {
   throw new Error('some error')
 }
 export function someThrow2() {
-	throw new Error('some error')
+  throw new Error('some error')
 }
 
 export const someTsx = () => {
@@ -21,12 +21,12 @@ export async function someAsyncTsx() {
 
 export async function callToThrow() {
   someThrow()
-	someThrow2()
+  someThrow2()
   return <div>some tsx</div>
 }
 
 export const someTsxWithJsx = async () => {
-	someThrow()
-	someThrow2()
-	return <div>some tsx</div>
+  someThrow()
+  someThrow2()
+  return <div>some tsx</div>
 }
