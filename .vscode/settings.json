@@ -6,7 +6,7 @@
 		"source.fixAll.eslint": "explicit"
 	},
   "[json]": { 
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome"
