@@ -2,6 +2,6 @@
 target
 node_modules/
 **.vsix
-
+*.DS_Store
 .env
 *.tgz
