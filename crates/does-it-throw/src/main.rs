@@ -812,4 +812,22 @@ mod integration_tests {
     .iter()
     .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
   }
+
+  #[test]
+  fn test_try_statement_does_not_include_throws () {
+    // This test is the same as test_try_statement but with include_try_statement_throws set to false
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/tryStatement.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 1);
+    assert_eq!(result.calls_to_throws.len(), 0);
+  }
 }
