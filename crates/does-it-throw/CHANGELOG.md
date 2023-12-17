@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.12...does-it-throw-v0.1.13) (2023-12-17)
+
+
+### Bug Fixes
+
+* functions and throw statements are underlined even if caught ([#81](https://github.com/michaelangeloio/does-it-throw/issues/81)) ([16adf85](https://github.com/michaelangeloio/does-it-throw/commit/16adf85b05b92542fa6c09ac1611dd56c7603c99))
+
 ## [0.1.12](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.11...does-it-throw-v0.1.12) (2023-12-16)
 
 
