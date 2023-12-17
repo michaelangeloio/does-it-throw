@@ -29,7 +29,9 @@
     "javascript",
     "typescript",
     "lsp",
-    "language server"
+    "language server",
+    "exceptions",
+    "extension"
   ],
   "qna": "https://github.com/michaelangeloio/does-it-throw/discussions",
   "dependencies": {
