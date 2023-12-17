@@ -182,11 +182,12 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       typescript_settings: {
         decorators: true
       },
-      function_throw_severity: settings.functionThrowSeverity,
-      throw_statement_severity: settings.throwStatementSeverity,
-      call_to_imported_throw_severity: settings.callToImportedThrowSeverity,
-      call_to_throw_severity: settings.callToThrowSeverity,
-      include_try_statement_throws: settings.includeTryStatementThrows
+      function_throw_severity: settings?.functionThrowSeverity ?? defaultSettings.functionThrowSeverity,
+      throw_statement_severity: settings?.throwStatementSeverity ?? defaultSettings.throwStatementSeverity,
+      call_to_imported_throw_severity:
+        settings?.callToImportedThrowSeverity ?? defaultSettings.callToImportedThrowSeverity,
+      call_to_throw_severity: settings?.callToThrowSeverity ?? defaultSettings.callToThrowSeverity,
+      include_try_statement_throws: settings?.includeTryStatementThrows ?? defaultSettings.includeTryStatementThrows
     } satisfies InputData
     const analysis = parse_js(opts) as ParseResult
 
