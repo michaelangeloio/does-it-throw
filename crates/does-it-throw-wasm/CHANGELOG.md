@@ -1,5 +1,9 @@
 # Changelog
 
+* The following workspace dependencies were updated
+  * dependencies
+    * does-it-throw bumped from 0.1.13 to 0.1.14
+
 ## [0.1.13](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-wasm-v0.1.12...does-it-throw-wasm-v0.1.13) (2023-12-17)
 
 
