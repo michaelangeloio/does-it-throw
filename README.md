@@ -14,18 +14,18 @@ TLDR; This is a *blazingly* fast **lsp server** to find *throw statements* in yo
 
 ### Check it out in action:
 
-![demo](https://github.com/michaelangeloio/does-it-throw/blob/main/assets/basic-throw.gif)
+![demo](./assets/basic-throw.gif)
 
 Also supports **call expressions**:
 
-![demo](https://github.com/michaelangeloio/does-it-throw/blob/main/assets/calltothrow.gif)
+![demo](./assets/calltothrow.gif)
 
 
 ## Why?
 
 Maybe you're working on a large codebase riddled with throw statements everywhere, and you want a better control flow. Or perhaps you're just curious about how many throw statements you have in your codebase. This simple tool can help you with that.
 
-Untyped `throw` statements can be a pain for those who come from languages like Go, where errors are typically values and first class citizens. Even Rust has the `Result` type. Knowing where throw statements are in your codebase might be helpful, even if their return types aren't [directly supported](https://github.com/microsoft/TypeScript/issues/13219).
+Untyped `throw` statements can be a pain for those who come from languages like Go, where errors are typically values and first-class citizens. Even Rust has the `Result` type. Knowing where throw statements are in your codebase might be helpful, even if their return types aren't [directly supported](https://github.com/microsoft/TypeScript/issues/13219).
 
 > This extension may not be for everyone, but it's definitely for me. I hope you find it useful too.
 
@@ -39,7 +39,7 @@ Untyped `throw` statements can be a pain for those who come from languages like 
 | LSP Server | [NPM](https://www.npmjs.com/package/does-it-throw-lsp) |
 | JetBrains | Coming soon... |
 
-> This extension is built with security in mind. It doesn't send any data to any third party servers. All publishes are done via a signed immutable commit from the [CI pipeline](https://github.com/michaelangeloio/does-it-throw/blob/update-details/.github/workflows/release-please.yaml).
+> This extension is built with security in mind. It doesn't send any data to any third party servers. All publishes are done via a signed immutable commit from the [CI pipeline](https://github.com/michaelangeloio/does-it-throw/actions/workflows/release-vsix.yaml).
 
 > The core of the code is written in Rust, and the LSP implementation for VsCode is written in Typescript. The Rust code is compiled to WASM and bundled with the VsCode extension. The extension is published to the VsCode marketplace, and the Rust code is published to [crates.io](https://crates.io/crates/does-it-throw). 
 
