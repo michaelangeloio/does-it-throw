@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.2](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.3.1...does-it-throw-vscode-v0.3.2) (2023-12-17)
+
+
+### Bug Fixes
+
+* add missing unit test for try statement ([#88](https://github.com/michaelangeloio/does-it-throw/issues/88)) ([290a323](https://github.com/michaelangeloio/does-it-throw/commit/290a323bae194d293ff8d0c826738f72dfef6212))
+* gifs not populating in vscode marketplace ([#85](https://github.com/michaelangeloio/does-it-throw/issues/85)) ([15a93d7](https://github.com/michaelangeloio/does-it-throw/commit/15a93d70c94e7de3139e79516fbe43a31701dfa6))
+* update server package.json keywords ([#87](https://github.com/michaelangeloio/does-it-throw/issues/87)) ([c19717d](https://github.com/michaelangeloio/does-it-throw/commit/c19717d96a09152d959bfd7d5c3a34ac62f5e26d))
+
 ## [0.3.1](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.3.0...does-it-throw-vscode-v0.3.1) (2023-12-17)
 
 

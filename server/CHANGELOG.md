@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-lsp-v0.3.1...does-it-throw-lsp-v0.3.2) (2023-12-17)
+
+
+### Bug Fixes
+
+* update server package.json keywords ([#87](https://github.com/michaelangeloio/does-it-throw/issues/87)) ([c19717d](https://github.com/michaelangeloio/does-it-throw/commit/c19717d96a09152d959bfd7d5c3a34ac62f5e26d))
+
 ## [0.3.1](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-lsp-v0.3.0...does-it-throw-lsp-v0.3.1) (2023-12-17)
 
 
