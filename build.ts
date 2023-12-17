@@ -153,6 +153,28 @@ const compile = async ({
     }
   }
 
+  const copyREADME = async () => {
+    const [readMe, license] = await Promise.all([
+      await Bun.file('README.md').text(),
+      await Bun.file('LICENSE.txt').text()
+    ])
+    const baseUrl = 'https://github.com/michaelangeloio/does-it-throw/blob/main'
+    function replaceLinks(markdown: string, prefix: string) {
+      const regex = /!\[.*?\]\((\.\/assets\/(basic-throw|calltothrow).*?)\)/g
+      return markdown.replace(regex, (match, p1) => {
+        return match.replace(p1, prefix + p1.substring(1))
+      })
+    }
+    const newReadMe = replaceLinks(readMe, baseUrl)
+    log('writing new readme')
+    await Promise.all([Bun.write('server/README.md', newReadMe), Bun.write('server/LICENSE.txt', license)])
+    return {
+      isError: false,
+      error: null,
+      type: 'copy-readme'
+    }
+  }
+
   /**
    * Build everything in parallel after wasm
    */
@@ -164,7 +186,9 @@ const compile = async ({
     }
   }
 
-  errors.push(...(await Promise.all([compileClient(), compileServer(), typeCheck('server'), typeCheck('client')])))
+  errors.push(
+    ...(await Promise.all([compileClient(), compileServer(), typeCheck('server'), typeCheck('client'), copyREADME()]))
+  )
   return errors
 }
 
