@@ -3,14 +3,16 @@ extern crate swc_common;
 use std::fs;
 
 use self::swc_common::{sync::Lrc, SourceMap};
-use does_it_throw::analyze_code;
+use does_it_throw::{analyze_code, UserSettings};
 
 pub fn main() {
   let sample_code = fs::read_to_string("crates/does-it-throw/src/fixtures/sample.ts")
     .expect("Something went wrong reading the file");
   let cm: Lrc<SourceMap> = Default::default();
-
-  let (result, _cm) = analyze_code(&sample_code, cm);
+  let user_settings = UserSettings {
+    include_try_statement_throws: false,
+  };
+  let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
   for import in result.import_sources.into_iter() {
     println!("Imported {}", import);
   }
@@ -75,8 +77,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 4);
@@ -134,8 +138,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 4);
@@ -193,8 +199,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 4);
@@ -247,8 +255,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 4);
@@ -302,8 +312,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 3);
@@ -356,8 +368,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 3);
@@ -409,8 +423,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 5);
@@ -467,8 +483,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 4);
@@ -517,8 +535,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 4);
@@ -567,8 +587,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 0);
@@ -616,8 +638,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 2);
@@ -660,8 +684,10 @@ mod integration_tests {
     // Read sample code from file
     let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let cm: Lrc<SourceMap> = Default::default();
-
-    let (result, _cm) = analyze_code(&sample_code, cm);
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 2);
@@ -720,5 +746,70 @@ mod integration_tests {
     ["someObjectLiteral-objectLiteralThrow", "NOT_SET-SomeThrow"]
       .iter()
       .for_each(|f| assert!(import_identifiers_contains(&import_identifiers, f)));
+  }
+
+  #[test]
+  fn test_try_statement() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/tryStatement.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    // general result assertions
+    assert_eq!(result.functions_with_throws.len(), 8);
+    assert_eq!(result.calls_to_throws.len(), 9);
+    assert_eq!(result.imported_identifier_usages.len(), 0);
+    assert_eq!(result.import_sources.len(), 0);
+
+    // function names
+    let function_names: Vec<String> = result
+      .functions_with_throws
+      .clone()
+      .into_iter()
+      .map(|f| f.function_or_method_name)
+      .collect();
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+
+    [
+      "someMethodThatThrows",
+      "_contextFromWorkflow",
+      "createServer",
+      "<constructor>",
+      "someConstThatThrows",
+      "nestedThrow",
+      "_contextFromWorkflow",
+      "someMethodThatThrows2",
+    ]
+    .iter()
+    .for_each(|f| assert!(function_names_contains(&function_names, f)));
+
+    // calls to throws
+    let calls_to_throws: Vec<String> = result.calls_to_throws.into_iter().map(|c| c.id).collect();
+
+    fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
+      calls_to_throws.iter().any(|c| c == call_to_throw)
+    }
+
+    [
+      "Something-somethingCall",
+      "Something-_somethingCall2",
+      "NOT_SET-someCallToThrow",
+      "Something-somethingCall2",
+      "http-<anonymous>",
+      "Something-_somethingCall",
+      "NOT_SET-callNestedThrow",
+      "NOT_SET-callToConstThatThrows4",
+      "NOT_SET-someCallToThrow",
+    ]
+    .iter()
+    .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
   }
 }

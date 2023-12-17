@@ -49,7 +49,15 @@ impl From<CombinedAnalyzers> for AnalysisResult {
   }
 }
 
-pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<SourceMap>) {
+pub struct UserSettings {
+  pub include_try_statement_throws: bool,
+}
+
+pub fn analyze_code(
+  content: &str,
+  cm: Lrc<SourceMap>,
+  user_settings: &UserSettings,
+) -> (AnalysisResult, Lrc<SourceMap>) {
   let fm = cm.new_source_file(swc_common::FileName::Anon, content.into());
   let lexer = Lexer::new(
     Syntax::Typescript(swc_ecma_parser::TsConfig {
@@ -75,6 +83,7 @@ pub fn analyze_code(content: &str, cm: Lrc<SourceMap>) -> (AnalysisResult, Lrc<S
     function_name_stack: vec![],
     current_class_name: None,
     current_method_name: None,
+    include_try_statement: user_settings.include_try_statement_throws,
   };
   throw_collector.visit_module(&module);
   let mut call_collector = CallFinder {

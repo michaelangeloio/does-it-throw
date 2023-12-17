@@ -1,3 +1,4 @@
 {
-  "doesItThrow.trace.server": "verbose"
+  "doesItThrow.trace.server": "verbose",
+  "doesItThrow.includeTryStatementThrows": false
 }
