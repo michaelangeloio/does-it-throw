@@ -16,7 +16,7 @@ use wasm_bindgen::prelude::*;
 
 use does_it_throw::call_finder::CallToThrowMap;
 use does_it_throw::throw_finder::{IdentifierUsage, ThrowMap};
-use does_it_throw::{analyze_code, AnalysisResult};
+use does_it_throw::{analyze_code, AnalysisResult, UserSettings};
 
 // Define an extern block with the `console.log` function.
 #[wasm_bindgen]
@@ -403,6 +403,7 @@ interface InputData {
   function_throw_severity?: DiagnosticSeverityInput;
   call_to_throw_severity?: DiagnosticSeverityInput;
   call_to_imported_throw_severity?: DiagnosticSeverityInput;
+  include_try_statement_throws?: boolean;
 }
 "#;
 
@@ -441,12 +442,13 @@ pub struct InputData {
   // uri: String,
   // typescript_settings: Option<TypeScriptSettings>,
   // ids_to_check: Vec<String>,
-  file_content: String,
-  debug: Option<bool>,
-  throw_statement_severity: Option<DiagnosticSeverityInput>,
-  function_throw_severity: Option<DiagnosticSeverityInput>,
-  call_to_throw_severity: Option<DiagnosticSeverityInput>,
-  call_to_imported_throw_severity: Option<DiagnosticSeverityInput>,
+  pub file_content: String,
+  pub debug: Option<bool>,
+  pub throw_statement_severity: Option<DiagnosticSeverityInput>,
+  pub function_throw_severity: Option<DiagnosticSeverityInput>,
+  pub call_to_throw_severity: Option<DiagnosticSeverityInput>,
+  pub call_to_imported_throw_severity: Option<DiagnosticSeverityInput>,
+  pub include_try_statement_throws: Option<bool>,
 }
 
 #[wasm_bindgen]
@@ -456,7 +458,11 @@ pub fn parse_js(data: JsValue) -> JsValue {
 
   let cm: Lrc<SourceMap> = Default::default();
 
-  let (results, cm) = analyze_code(&input_data.file_content, cm);
+  let user_settings = UserSettings {
+    include_try_statement_throws: input_data.include_try_statement_throws.unwrap_or(false),
+  };
+
+  let (results, cm) = analyze_code(&input_data.file_content, cm, &user_settings);
 
   let parse_result = ParseResult::into(results, &cm, input_data.debug, input_data);
 
@@ -869,5 +875,44 @@ mod tests {
       foo_diagnostics[1].message,
       "Function imported that may throw."
     );
+  }
+
+  #[test]
+  fn test_should_include_throws_in_try_statement() {
+    // smoke test to ensure backwards compatibility
+    let cm = Lrc::new(SourceMap::default());
+    let source_file = cm.new_source_file(
+      FileName::Custom("test_file".into()),
+      "function foo() {\n  try {\n    throw new Error();\n  } catch (e) {\n    throw e;\n  }\n}".into(),
+    );
+
+    let throw_span = Span::new(
+      source_file.start_pos + BytePos(34),
+      source_file.start_pos + BytePos(51),
+      Default::default(),
+    );
+
+    let functions_with_throws = HashSet::from([ThrowMap {
+      throw_statement: throw_span,
+      throw_spans: vec![throw_span],
+      function_or_method_name: "foo".to_string(),
+      class_name: None,
+      id: "foo".to_string(),
+    }]);
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    add_diagnostics_for_functions_that_throw(
+      &mut diagnostics,
+      functions_with_throws,
+      &cm,
+      None,
+      DiagnosticSeverity::Hint,
+      DiagnosticSeverity::Hint,
+    );
+
+    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Hint.to_int());
+    assert_eq!(diagnostics[0].message, "Function that may throw.");
   }
 }

@@ -53,6 +53,7 @@ local server_config = {
         functionThrowSeverity = "Hint",
         callToThrowSeverity = "Hint",
         callToImportedThrowSeverity = "Hint",
+        includeTryStatementThrows = false,
         maxNumberOfProblems = 10000
     }
 }

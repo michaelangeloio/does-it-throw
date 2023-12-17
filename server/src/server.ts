@@ -81,6 +81,7 @@ interface Settings {
   functionThrowSeverity: DiagnosticSeverity
   callToThrowSeverity: DiagnosticSeverity
   callToImportedThrowSeverity: DiagnosticSeverity
+  includeTryStatementThrows: boolean
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
@@ -91,7 +92,8 @@ const defaultSettings: Settings = {
   throwStatementSeverity: 'Hint',
   functionThrowSeverity: 'Hint',
   callToThrowSeverity: 'Hint',
-  callToImportedThrowSeverity: 'Hint'
+  callToImportedThrowSeverity: 'Hint',
+  includeTryStatementThrows: false
 }
 // 👆 very unlikely someone will have more than 1 million throw statements, lol
 // if you do, might want to rethink your code?
@@ -180,10 +182,12 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       typescript_settings: {
         decorators: true
       },
-      function_throw_severity: settings.functionThrowSeverity,
-      throw_statement_severity: settings.throwStatementSeverity,
-      call_to_imported_throw_severity: settings.callToImportedThrowSeverity,
-      call_to_throw_severity: settings.callToThrowSeverity
+      function_throw_severity: settings?.functionThrowSeverity ?? defaultSettings.functionThrowSeverity,
+      throw_statement_severity: settings?.throwStatementSeverity ?? defaultSettings.throwStatementSeverity,
+      call_to_imported_throw_severity:
+        settings?.callToImportedThrowSeverity ?? defaultSettings.callToImportedThrowSeverity,
+      call_to_throw_severity: settings?.callToThrowSeverity ?? defaultSettings.callToThrowSeverity,
+      include_try_statement_throws: settings?.includeTryStatementThrows ?? defaultSettings.includeTryStatementThrows
     } satisfies InputData
     const analysis = parse_js(opts) as ParseResult
 

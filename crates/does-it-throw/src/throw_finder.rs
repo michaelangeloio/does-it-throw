@@ -29,12 +29,24 @@ fn prop_name_to_string(prop_name: &PropName) -> String {
 }
 
 pub struct ThrowFinder {
-  throw_spans: Vec<Span>,
+  pub throw_spans: Vec<Span>,
+  pub inside_try_statement: bool,
+  pub include_try_statements: bool,
 }
 
 impl Visit for ThrowFinder {
   fn visit_throw_stmt(&mut self, node: &ThrowStmt) {
-    self.throw_spans.push(node.span)
+    if !self.inside_try_statement {
+      self.throw_spans.push(node.span);
+    }
+    if self.inside_try_statement && self.include_try_statements {
+      self.throw_spans.push(node.span);
+    }
+  }
+  fn visit_try_stmt(&mut self,n: &swc_ecma_ast::TryStmt) {
+      self.inside_try_statement = true;
+      swc_ecma_visit::visit_try_stmt(self, n);
+      self.inside_try_statement = false;
   }
 }
 
@@ -107,12 +119,15 @@ pub struct ThrowAnalyzer {
   pub function_name_stack: Vec<String>,
   pub current_class_name: Option<String>,
   pub current_method_name: Option<String>,
+  pub include_try_statement: bool,
 }
 
 impl ThrowAnalyzer {
   fn check_function_for_throws(&mut self, function: &Function) {
     let mut throw_finder = ThrowFinder {
       throw_spans: vec![],
+      inside_try_statement: false,
+      include_try_statements: self.include_try_statement,
     };
     throw_finder.visit_function(function);
     if !throw_finder.throw_spans.is_empty() {
@@ -145,6 +160,8 @@ impl ThrowAnalyzer {
   fn check_arrow_function_for_throws(&mut self, arrow_function: &ArrowExpr) {
     let mut throw_finder = ThrowFinder {
       throw_spans: vec![],
+      inside_try_statement: false,
+      include_try_statements: self.include_try_statement,
     };
     throw_finder.visit_arrow_expr(arrow_function);
     if !throw_finder.throw_spans.is_empty() {
@@ -177,6 +194,8 @@ impl ThrowAnalyzer {
   fn check_constructor_for_throws(&mut self, constructor: &Constructor) {
     let mut throw_finder = ThrowFinder {
       throw_spans: vec![],
+      inside_try_statement: false,
+      include_try_statements: self.include_try_statement,
     };
     throw_finder.visit_constructor(constructor);
     if !throw_finder.throw_spans.is_empty() {
@@ -289,6 +308,8 @@ impl Visit for ThrowAnalyzer {
         Expr::Arrow(arrow_expr) => {
           let mut throw_finder = ThrowFinder {
             throw_spans: vec![],
+            inside_try_statement: false,
+            include_try_statements: self.include_try_statement,
           };
           throw_finder.visit_arrow_expr(arrow_expr);
           if !throw_finder.throw_spans.is_empty() {
@@ -345,6 +366,8 @@ impl Visit for ThrowAnalyzer {
 
               let mut throw_finder = ThrowFinder {
                 throw_spans: vec![],
+                inside_try_statement: false,
+                include_try_statements: self.include_try_statement,
               };
               throw_finder.visit_function(&method_prop.function);
 
@@ -374,6 +397,8 @@ impl Visit for ThrowAnalyzer {
               Expr::Fn(fn_expr) => {
                 let mut throw_finder = ThrowFinder {
                   throw_spans: vec![],
+                  inside_try_statement: false,
+                  include_try_statements: self.include_try_statement,
                 };
                 throw_finder.visit_function(&fn_expr.function);
                 let function_name = prop_name_to_string(&key_value_prop.key);
@@ -399,6 +424,8 @@ impl Visit for ThrowAnalyzer {
               Expr::Arrow(arrow_expr) => {
                 let mut throw_finder = ThrowFinder {
                   throw_spans: vec![],
+                  inside_try_statement: false,
+                  include_try_statements: self.include_try_statement,
                 };
                 throw_finder.visit_arrow_expr(arrow_expr);
                 let function_name = prop_name_to_string(&key_value_prop.key);
@@ -437,6 +464,8 @@ impl Visit for ThrowAnalyzer {
         let function_name = ident.sym.to_string();
         let mut throw_finder = ThrowFinder {
           throw_spans: vec![],
+          inside_try_statement: false,
+          include_try_statements: self.include_try_statement,
         };
 
         // Check if the init is a function expression or arrow function
@@ -585,6 +614,8 @@ impl Visit for ThrowAnalyzer {
 
       let mut throw_finder = ThrowFinder {
         throw_spans: vec![],
+        inside_try_statement: false,
+        include_try_statements: self.include_try_statement,
       };
       throw_finder.visit_class_method(class_method);
 

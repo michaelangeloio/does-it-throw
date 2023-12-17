@@ -127,6 +127,12 @@
           "default": 100,
           "description": "Controls the maximum number of problems produced by the server."
         },
+        "doesItThrow.includeTryStatementThrows": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "description": "Include throw statements inside try statements."
+        },
         "doesItThrow.trace.server": {
           "scope": "window",
           "type": "string",
