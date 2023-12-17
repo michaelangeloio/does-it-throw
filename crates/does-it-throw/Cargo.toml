@@ -1,6 +1,6 @@
 [package]
 name = "does-it-throw"
-version = "0.1.12"
+version = "0.1.13"
 description = "a library for getting ES throw statements - using SWC"
 license = "MIT"
 documentation = "https://github.com/michaelangeloio/does-it-throw/blob/main/readme.md"
