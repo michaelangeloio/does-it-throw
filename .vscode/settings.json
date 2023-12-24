@@ -2,9 +2,6 @@
   "editor.tabSize": 2,
   "typescript.tsc.autoDetect": "off",
   "typescript.preferences.quoteStyle": "single",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
