@@ -9,7 +9,8 @@ use std::vec;
 
 use swc_ecma_ast::{
   ArrowExpr, AssignExpr, BlockStmtOrExpr, Callee, ClassDecl, ClassMethod, Constructor, Decl,
-  ExportDecl, FnDecl, ObjectLit, PatOrExpr, Prop, PropName, PropOrSpread, Stmt, VarDeclarator,
+  ExportDecl, FnDecl, ObjectLit, PatOrExpr, Prop, PropName, PropOrSpread, Stmt, TryStmt,
+  VarDeclarator,
 };
 
 use self::swc_common::Span;
@@ -28,25 +29,65 @@ fn prop_name_to_string(prop_name: &PropName) -> String {
   }
 }
 
+#[derive(Clone)]
+struct BlockContext {
+  try_count: usize,
+  catch_count: usize,
+}
+
 pub struct ThrowFinder {
   pub throw_spans: Vec<Span>,
-  pub inside_try_statement: bool,
+  context_stack: Vec<BlockContext>, // Stack to track try/catch context
   pub include_try_statements: bool,
+}
+
+impl ThrowFinder {
+  fn current_context(&self) -> Option<&BlockContext> {
+    self.context_stack.last()
+  }
+
+  pub fn new(include_try_statements: bool) -> Self {
+    Self {
+      throw_spans: vec![],
+      context_stack: vec![],
+      include_try_statements,
+    }
+  }
 }
 
 impl Visit for ThrowFinder {
   fn visit_throw_stmt(&mut self, node: &ThrowStmt) {
-    if !self.inside_try_statement {
+    if self.include_try_statements {
       self.throw_spans.push(node.span);
-    }
-    if self.inside_try_statement && self.include_try_statements {
-      self.throw_spans.push(node.span);
+    } else {
+      let context = self.current_context();
+      if context.map_or(true, |ctx| ctx.try_count == ctx.catch_count) {
+        // Add throw span if not within an unbalanced try block
+        self.throw_spans.push(node.span);
+      }
     }
   }
-  fn visit_try_stmt(&mut self,n: &swc_ecma_ast::TryStmt) {
-      self.inside_try_statement = true;
-      swc_ecma_visit::visit_try_stmt(self, n);
-      self.inside_try_statement = false;
+
+  fn visit_try_stmt(&mut self, node: &TryStmt) {
+    // Entering a try block
+    let current_context = self.current_context().cloned().unwrap_or(BlockContext {
+      try_count: 0,
+      catch_count: 0,
+    });
+    self.context_stack.push(BlockContext {
+      try_count: current_context.try_count + 1,
+      catch_count: current_context.catch_count,
+    });
+    swc_ecma_visit::visit_block_stmt_or_expr(self, &BlockStmtOrExpr::BlockStmt(node.block.clone()));
+
+    if let Some(catch_clause) = &node.handler {
+      let catch_context = self.context_stack.last_mut().unwrap();
+      catch_context.catch_count += 1; // Increment catch count within the same try context
+      swc_ecma_visit::visit_catch_clause(self, catch_clause);
+    }
+
+    // Leaving try-catch block
+    self.context_stack.pop();
   }
 }
 
@@ -124,11 +165,7 @@ pub struct ThrowAnalyzer {
 
 impl ThrowAnalyzer {
   fn check_function_for_throws(&mut self, function: &Function) {
-    let mut throw_finder = ThrowFinder {
-      throw_spans: vec![],
-      inside_try_statement: false,
-      include_try_statements: self.include_try_statement,
-    };
+    let mut throw_finder = ThrowFinder::new(self.include_try_statement);
     throw_finder.visit_function(function);
     if !throw_finder.throw_spans.is_empty() {
       let throw_map = ThrowMap {
@@ -158,11 +195,7 @@ impl ThrowAnalyzer {
   }
 
   fn check_arrow_function_for_throws(&mut self, arrow_function: &ArrowExpr) {
-    let mut throw_finder = ThrowFinder {
-      throw_spans: vec![],
-      inside_try_statement: false,
-      include_try_statements: self.include_try_statement,
-    };
+    let mut throw_finder = ThrowFinder::new(self.include_try_statement);
     throw_finder.visit_arrow_expr(arrow_function);
     if !throw_finder.throw_spans.is_empty() {
       let throw_map = ThrowMap {
@@ -192,11 +225,7 @@ impl ThrowAnalyzer {
   }
 
   fn check_constructor_for_throws(&mut self, constructor: &Constructor) {
-    let mut throw_finder = ThrowFinder {
-      throw_spans: vec![],
-      inside_try_statement: false,
-      include_try_statements: self.include_try_statement,
-    };
+    let mut throw_finder = ThrowFinder::new(self.include_try_statement);
     throw_finder.visit_constructor(constructor);
     if !throw_finder.throw_spans.is_empty() {
       let throw_map = ThrowMap {
@@ -306,11 +335,7 @@ impl Visit for ThrowAnalyzer {
         }
 
         Expr::Arrow(arrow_expr) => {
-          let mut throw_finder = ThrowFinder {
-            throw_spans: vec![],
-            inside_try_statement: false,
-            include_try_statements: self.include_try_statement,
-          };
+          let mut throw_finder = ThrowFinder::new(self.include_try_statement);
           throw_finder.visit_arrow_expr(arrow_expr);
           if !throw_finder.throw_spans.is_empty() {
             let throw_map = ThrowMap {
@@ -364,11 +389,7 @@ impl Visit for ThrowAnalyzer {
 
               self.function_name_stack.push(method_name.clone());
 
-              let mut throw_finder = ThrowFinder {
-                throw_spans: vec![],
-                inside_try_statement: false,
-                include_try_statements: self.include_try_statement,
-              };
+              let mut throw_finder = ThrowFinder::new(self.include_try_statement);
               throw_finder.visit_function(&method_prop.function);
 
               if !throw_finder.throw_spans.is_empty() {
@@ -395,11 +416,7 @@ impl Visit for ThrowAnalyzer {
           if let Prop::KeyValue(key_value_prop) = &**prop {
             match &*key_value_prop.value {
               Expr::Fn(fn_expr) => {
-                let mut throw_finder = ThrowFinder {
-                  throw_spans: vec![],
-                  inside_try_statement: false,
-                  include_try_statements: self.include_try_statement,
-                };
+                let mut throw_finder = ThrowFinder::new(self.include_try_statement);
                 throw_finder.visit_function(&fn_expr.function);
                 let function_name = prop_name_to_string(&key_value_prop.key);
 
@@ -422,11 +439,7 @@ impl Visit for ThrowAnalyzer {
                 }
               }
               Expr::Arrow(arrow_expr) => {
-                let mut throw_finder = ThrowFinder {
-                  throw_spans: vec![],
-                  inside_try_statement: false,
-                  include_try_statements: self.include_try_statement,
-                };
+                let mut throw_finder = ThrowFinder::new(self.include_try_statement);
                 throw_finder.visit_arrow_expr(arrow_expr);
                 let function_name = prop_name_to_string(&key_value_prop.key);
 
@@ -462,11 +475,7 @@ impl Visit for ThrowAnalyzer {
     if let Some(ident) = &declarator.name.as_ident() {
       if let Some(init) = &declarator.init {
         let function_name = ident.sym.to_string();
-        let mut throw_finder = ThrowFinder {
-          throw_spans: vec![],
-          inside_try_statement: false,
-          include_try_statements: self.include_try_statement,
-        };
+        let mut throw_finder = ThrowFinder::new(self.include_try_statement);
 
         // Check if the init is a function expression or arrow function
         if let Expr::Fn(fn_expr) = &**init {
@@ -612,11 +621,7 @@ impl Visit for ThrowAnalyzer {
 
       self.function_name_stack.push(method_name.clone());
 
-      let mut throw_finder = ThrowFinder {
-        throw_spans: vec![],
-        inside_try_statement: false,
-        include_try_statements: self.include_try_statement,
-      };
+      let mut throw_finder = ThrowFinder::new(self.include_try_statement);
       throw_finder.visit_class_method(class_method);
 
       if !throw_finder.throw_spans.is_empty() {
