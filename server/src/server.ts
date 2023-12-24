@@ -219,7 +219,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       // TODO - this is a bit of a mess, but it works for now.
       // The original analysis is the one that has the throw statements Map()
       // We get the get the throw_ids from the imported analysis and then
-      // check the original analysis for existing throw_ids
+      // check the original analysis for existing throw_ids.
       // This allows to to get the diagnostics from the imported analysis (one level deep for now)
       for (const import_analysis of analysisArr) {
         if (!import_analysis) {
