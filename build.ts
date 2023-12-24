@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { watch } from 'chokidar'
 import { build as esbuild } from 'esbuild'
 import copy from 'esbuild-plugin-copy'
