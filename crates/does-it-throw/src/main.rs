@@ -879,7 +879,6 @@ mod integration_tests {
     fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
       function_names.iter().any(|f| f == function_name)
     }
-    println!("function names: {:?}", function_names);
 
     ["parentCatchThatisNotCaught", "throwInsideCatch"]
       .iter()
