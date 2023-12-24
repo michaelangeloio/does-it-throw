@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.3](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.3.2...does-it-throw-vscode-v0.3.3) (2023-12-24)
+
+
+### Bug Fixes
+
+* catch with throw statement not included ([#95](https://github.com/michaelangeloio/does-it-throw/issues/95)) ([fd223db](https://github.com/michaelangeloio/does-it-throw/commit/fd223db4f56e87439999b9b33a393769bd2b7c5b))
+* **deps-dev:** remove remaining eslint dev dependencies ([#97](https://github.com/michaelangeloio/does-it-throw/issues/97)) ([5f173a6](https://github.com/michaelangeloio/does-it-throw/commit/5f173a69cb86570a526a665d453b86ae776538d0))
+* remove unused tsx, user-home, semver ([#100](https://github.com/michaelangeloio/does-it-throw/issues/100)) ([de8218c](https://github.com/michaelangeloio/does-it-throw/commit/de8218ce72e01d0092fc03141b26f44d28d5fc1b))
+
 ## [0.3.2](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.3.1...does-it-throw-vscode-v0.3.2) (2023-12-17)
 
 
