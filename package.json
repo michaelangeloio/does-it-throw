@@ -55,11 +55,7 @@
     "chokidar": "^3.5.3",
     "esbuild": "^0.19.5",
     "esbuild-plugin-copy": "^2.1.1",
-    "semver": "^7.5.4",
-    "toml": "^3.0.0",
-    "tsx": "^3.14.0",
-    "typescript": "5.2.2",
-    "user-home": "^3.0.0"
+    "typescript": "5.2.2"
   },
   "activationEvents": [
     "onLanguage:typescript",
