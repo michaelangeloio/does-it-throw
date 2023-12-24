@@ -749,7 +749,7 @@ mod integration_tests {
   }
 
   #[test]
-  fn test_try_statement() {
+  fn test_try_statement_including_all_throws() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let file_path = format!("{}/src/fixtures/tryStatement.ts", manifest_dir);
     // Read sample code from file
@@ -814,7 +814,7 @@ mod integration_tests {
   }
 
   #[test]
-  fn test_try_statement_does_not_include_throws () {
+  fn test_try_statement_does_not_include_all_throws () {
     // This test is the same as test_try_statement but with include_try_statement_throws set to false
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let file_path = format!("{}/src/fixtures/tryStatement.ts", manifest_dir);
@@ -829,5 +829,60 @@ mod integration_tests {
 
     assert_eq!(result.functions_with_throws.len(), 1);
     assert_eq!(result.calls_to_throws.len(), 0);
+  }
+  #[test]
+  fn test_try_statement_nested_including_all_throws() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/tryStatementNested.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    // general result assertions
+    assert_eq!(result.functions_with_throws.len(), 4);
+    assert_eq!(result.calls_to_throws.len(), 0);
+    assert_eq!(result.imported_identifier_usages.len(), 0);
+    assert_eq!(result.import_sources.len(), 0);
+  }
+
+  #[test]
+  fn test_try_statement_nested_does_not_include_throws () {
+    // We need to test the following conditions:
+    // 1. include_try_statement_throws = false
+    // 2. a nested try statement that throws that ISNT caught by the parent try statement
+    // 3. a nested try statement that throws that IS caught by the parent try statement
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/tryStatementNested.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: false,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 2);
+    assert_eq!(result.calls_to_throws.len(), 0);
+
+    let function_names: Vec<String> = result
+      .functions_with_throws
+      .clone()
+      .into_iter()
+      .map(|f| f.function_or_method_name)
+      .collect();
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+    println!("function names: {:?}", function_names);
+
+    ["parentCatchThatisNotCaught", "throwInsideCatch"]
+      .iter()
+      .for_each(|f| assert!(function_names_contains(&function_names, f)));
   }
 }
