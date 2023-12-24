@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.14](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.13...does-it-throw-v0.1.14) (2023-12-17)
+
+
+### Bug Fixes
+
+* add missing unit test for try statement ([#88](https://github.com/michaelangeloio/does-it-throw/issues/88)) ([290a323](https://github.com/michaelangeloio/does-it-throw/commit/290a323bae194d293ff8d0c826738f72dfef6212))
+
 ## [0.1.13](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.12...does-it-throw-v0.1.13) (2023-12-17)
 
 
