@@ -1,0 +1,20 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.ultimate</depends>
+    <depends>JavaScript</depends>
+    
+    <id>org.jetbrains.plugins.dit</id>
+    <name>IntelliJ Platform Plugin Template</name>
+    <vendor>JetBrains</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <resource-bundle>messages.MyBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- LSP -->
+        <platform.lsp.serverSupportProvider implementation="org.jetbrains.plugins.dit.lsp.DoesItThrowLspServerSupportProvider"/>
+    </extensions>
+    
+</idea-plugin>
