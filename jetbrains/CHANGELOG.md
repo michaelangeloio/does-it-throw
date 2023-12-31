@@ -1,5 +1,8 @@
 # Changelog
 
+## [Unreleased]
+
+
 ## [0.3.3](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-lsp-v0.3.2...does-it-throw-lsp-v0.3.3) (2023-12-24)
 
 
