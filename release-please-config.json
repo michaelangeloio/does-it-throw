@@ -23,7 +23,7 @@
     "crates/does-it-throw-wasm": {
       "release-type": "rust"
     },
-    "intellij": {
+    "jetbrains": {
       "release-type": "java",
       "extra-files": ["gradle.properties"]
     }
