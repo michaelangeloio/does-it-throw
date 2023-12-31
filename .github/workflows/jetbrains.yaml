@@ -41,10 +41,11 @@ jobs:
       - name: Export Properties
         id: properties
         shell: bash
+        working-directory: ./jetbrains
         run: |
-          PROPERTIES="$(./jetbrains/gradlew properties --console=plain -q)"
+          PROPERTIES="$(./gradlew properties --console=plain -q)"
           VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
-          CHANGELOG="$(./jetbrains/gradlew getChangelog --unreleased --no-header --console=plain -q)"
+          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
@@ -53,14 +54,16 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          ./jetbrains/gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
 
       # Build plugin
       - name: Build plugin
-        run: ./jetbrains/gradlew buildPlugin
+        working-directory: ./jetbrains
+        run: ./gradlew buildPlugin
 
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
+        working-directory: ./jetbrains
         id: artifact
         shell: bash
         run: |
@@ -103,7 +106,8 @@ jobs:
 
       # Run tests
       - name: Run Tests
-        run: ./jetbrains/gradlew check
+        working-directory: ./jetbrains
+        run: ./gradlew check
 
   # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
@@ -145,7 +149,8 @@ jobs:
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
-        run: ./jetbrains/gradlew runPluginVerifier -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
+        working-directory: ./jetbrains
+        run: ./gradlew runPluginVerifier -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
 
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
