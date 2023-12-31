@@ -21,11 +21,20 @@ repositories {
     mavenCentral()
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
 //    implementation(libs.annotations)
-}
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 
+    // Mockito for mocking in tests
+    testImplementation("org.mockito:mockito-core:4.5.1") // adjust the version as needed
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+
+}
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
 kotlin {
     @Suppress("UnstableApiUsage")
