@@ -35,14 +35,13 @@ kotlin {
     }
 }
 
-// Configure Gradle IntelliJ Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    pluginName = properties("pluginName")
-    version = properties("platformVersion")
-    type = properties("platformType")
+  pluginName = properties("pluginName")
+  version = properties("platformVersion")
+  type = properties("platformType")
 
-    // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
-    plugins = properties("platformPlugins").map { it.split(',').map(String::trim).filter(String::isNotEmpty) }
+  // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
+  plugins = properties("platformPlugins").map { it.split(',').map(String::trim).filter(String::isNotEmpty) }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -51,13 +50,6 @@ changelog {
     repositoryUrl = properties("pluginRepositoryUrl")
 }
 
-// Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
-qodana {
-    cachePath = provider { file(".qodana").canonicalPath }
-    reportPath = provider { file("build/reports/inspections").canonicalPath }
-    saveReport = true
-    showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
-}
 
 // Configure Gradle Kover Plugin - read more: https://github.com/Kotlin/kotlinx-kover#configuration
 koverReport {
@@ -74,9 +66,10 @@ tasks {
       doLast {
           val pluginName = project.ext.get("pluginName") ?: throw GradleException("Plugin name not set.")
 
-          val sourceDir = file("${project.projectDir}/gen/language-server")
-          val destDir = file("${destinationDir.path}/$pluginName/language-server")
-          print(destDir)
+          val sourceDir = file("${project.projectDir}/../server/out")
+          println("language server sourceDir: $sourceDir")
+          val destDir = file("${destinationDir.path}/${pluginName}/language-server")
+          println("language server destDir: $destDir")
 
           if (sourceDir.exists()) {
               copy {
@@ -94,9 +87,8 @@ tasks {
     }
 
     patchPluginXml {
-        version = properties("pluginVersion")
-        sinceBuild = properties("pluginSinceBuild")
-//        untilBuild = properties("pluginUntilBuild")
+        sinceBuild.set("233")
+        untilBuild.set("240.*")
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {

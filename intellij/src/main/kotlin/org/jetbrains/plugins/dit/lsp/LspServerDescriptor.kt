@@ -13,19 +13,20 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.lsp.api.ProjectWideLspServerDescriptor
 import org.jetbrains.plugins.dit.DoesItThrowUtils
 
-class DoesItThrowLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "Prisma") {
+class DoesItThrowLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "Does it Throw?") {
 
     override fun isSupportedFile(file: VirtualFile) = DoesItThrowUtils.isSupportedFileType(file)
 
     override fun createCommandLine(): GeneralCommandLine {
         val interpreter = NodeJsInterpreterManager.getInstance(project).interpreter
         if (interpreter !is NodeJsLocalInterpreter && interpreter !is WslNodeInterpreter) {
-            // shouldn't happen, checked in PrismaLspServerSupportProvider
+            // shouldn't happen
             throw ExecutionException("no local node interpreter ")
         }
 
         val lsp = JSLanguageServiceUtil.getPluginDirectory(javaClass, "language-server/server.js")
-        thisLogger().warn(lsp.path)
+        thisLogger().info("language server loaded")
+        thisLogger().info(lsp.path)
         if (lsp == null || !lsp.exists()) {
             // broken plugin installation?
             throw ExecutionException("could not find language server")
