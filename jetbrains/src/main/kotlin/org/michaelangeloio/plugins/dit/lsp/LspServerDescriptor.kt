@@ -43,14 +43,12 @@ class DoesItThrowLspServerDescriptor(project: Project) : ProjectWideLspServerDes
         }
     }
 
-//  // references resolution is implemented without using the LSP server
-//  override val lspGoToDefinitionSupport = false
-//
-//  // code completion is implemented without using the LSP server
-//  override val lspCompletionSupport = null
-//
-//  // code formatting is implemented without using the LSP server
-//  override val lspFormattingSupport = null
-//
-//  override val lspHoverSupport = false
+  // references resolution is implemented without using the LSP server
+  override val lspGoToDefinitionSupport = false
+
+  // code completion is implemented without using the LSP server
+  override val lspCompletionSupport = null
+
+  // code formatting is implemented without using the LSP server
+  override val lspFormattingSupport = null
 }
