@@ -125,6 +125,27 @@ jobs:
         with:
           gradle-home-cache-cleanup: true
 
+      - name: Install Bun
+        uses: oven-sh/setup-bun@a1800f471a0bc25cddac36bb13e6f436ddf341d7
+  
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@0d096b08b4e5a7de8c28de67e11e945404e9eefa
+        with:
+          version: 'latest'
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build With Bun
+        run: bun run build
+
       - name: Setup Plugin Verifier IDEs Cache
         uses: actions/cache@v3
         with:
