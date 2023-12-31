@@ -1,4 +1,4 @@
-package org.jetbrains.plugins.dit
+package org.michaelangeloio.plugins.dit
 
 import com.intellij.openapi.vfs.VirtualFile
 

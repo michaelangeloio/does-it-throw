@@ -1,4 +1,4 @@
-package org.jetbrains.plugins.dit.lsp
+package org.michaelangeloio.plugins.dit.lsp
 
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -11,7 +11,7 @@ import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.lsp.api.ProjectWideLspServerDescriptor
-import org.jetbrains.plugins.dit.DoesItThrowUtils
+import org.michaelangeloio.plugins.dit.DoesItThrowUtils
 
 class DoesItThrowLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "Does it Throw?") {
 

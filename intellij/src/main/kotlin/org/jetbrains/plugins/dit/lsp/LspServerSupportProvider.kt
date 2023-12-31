@@ -1,4 +1,4 @@
-package org.jetbrains.plugins.dit.lsp
+package org.michaelangeloio.plugins.dit.lsp
 
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
 import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
@@ -6,7 +6,7 @@ import com.intellij.javascript.nodejs.interpreter.wsl.WslNodeInterpreter
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.lsp.api.LspServerSupportProvider
-import org.jetbrains.plugins.dit.DoesItThrowUtils
+import org.michaelangeloio.plugins.dit.DoesItThrowUtils
 
 
 class DoesItThrowLspServerSupportProvider : LspServerSupportProvider {

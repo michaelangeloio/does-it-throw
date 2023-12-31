@@ -197,7 +197,7 @@ It provides general information about the plugin, its dependencies, extensions, 
 
 ```xml
 <idea-plugin>
-  <id>org.jetbrains.plugins.dit</id>
+  <id>org.michaelangeloio.plugins.dit</id>
   <name>Template</name>
   <vendor>JetBrains</vendor>
   

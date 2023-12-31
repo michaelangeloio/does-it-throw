@@ -4,9 +4,9 @@
     <depends>com.intellij.modules.ultimate</depends>
     <depends>JavaScript</depends>
     
-    <id>org.jetbrains.plugins.dit</id>
-    <name>IntelliJ Platform Plugin Template</name>
-    <vendor>JetBrains</vendor>
+    <id>org.michaelangeloio.plugins.dit</id>
+    <name>Does it Throw?</name>
+    <vendor>michaelangeloio</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
@@ -14,7 +14,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- LSP -->
-        <platform.lsp.serverSupportProvider implementation="org.jetbrains.plugins.dit.lsp.DoesItThrowLspServerSupportProvider"/>
+        <platform.lsp.serverSupportProvider implementation="org.michaelangeloio.plugins.dit.lsp.DoesItThrowLspServerSupportProvider"/>
     </extensions>
     
 </idea-plugin>
