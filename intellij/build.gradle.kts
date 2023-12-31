@@ -91,7 +91,7 @@ tasks {
         untilBuild.set("240.*")
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        val readMe = layout.projectDirectory.file(file("${project.projectDir}/../README.md").path)
+        val readMe = layout.projectDirectory.file(file("${project.projectDir}/../server/README.md").path)
         println("readMe sourceDir: $readMe")
         pluginDescription = providers.fileContents(readMe).asText.map {
             val start = "<!-- Plugin description -->"

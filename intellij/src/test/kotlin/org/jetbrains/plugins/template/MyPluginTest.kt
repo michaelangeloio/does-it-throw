@@ -1,39 +1,27 @@
-package org.michaelangeloio.plugins.dit
+package org.intellij.prisma.lsp
 
-import com.intellij.ide.highlighter.XmlFileType
-import com.intellij.openapi.components.service
-import com.intellij.psi.xml.XmlFile
-import com.intellij.testFramework.TestDataPath
-import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import com.intellij.util.PsiErrorElementUtil
-import org.michaelangeloio.plugins.dit.services.MyProjectService
+import com.intellij.lang.javascript.modules.JSTempDirWithNodeInterpreterTest
+import com.intellij.platform.lsp.tests.checkLspHighlighting
 
-@TestDataPath("\$CONTENT_ROOT/src/test/testData")
-class MyPluginTest : BasePlatformTestCase() {
+class DoesItThrowLspHighlightingTest : JSTempDirWithNodeInterpreterTest() {
+  fun testCreateEnumQuickFix() {
+    myFixture.configureByText("foo.prisma", """
+      model User {
+        name <error descr="Type \"Foo\" is neither a built-in type, nor refers to another model, custom type, or enum.">Foo</error><caret>
+      }
 
-    fun testXMLFile() {
-        val psiFile = myFixture.configureByText(XmlFileType.INSTANCE, "<foo>bar</foo>")
-        val xmlFile = assertInstanceOf(psiFile, XmlFile::class.java)
+    """.trimIndent())
+    myFixture.checkLspHighlighting()
+    myFixture.launchAction(myFixture.findSingleIntention("Create new enum 'Foo'"))
+    myFixture.checkResult("""
+      model User {
+        name Foo<caret>
+      }
 
-        assertFalse(PsiErrorElementUtil.hasErrors(project, xmlFile.virtualFile))
+      enum Foo {
 
-        assertNotNull(xmlFile.rootTag)
+      }
 
-        xmlFile.rootTag?.let {
-            assertEquals("foo", it.name)
-            assertEquals("bar", it.value.text)
-        }
-    }
-
-    fun testRename() {
-        myFixture.testRename("foo.xml", "foo_after.xml", "a2")
-    }
-
-    fun testProjectService() {
-        val projectService = project.service<MyProjectService>()
-
-        assertNotSame(projectService.getRandomNumber(), projectService.getRandomNumber())
-    }
-
-    override fun getTestDataPath() = "src/test/testData/rename"
+    """.trimIndent())
+  }
 }
