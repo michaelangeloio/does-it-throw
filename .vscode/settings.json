@@ -17,5 +17,16 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "doesItThrow.trace.server": "verbose"
+  "doesItThrow.trace.server": "verbose",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "intellij/.gradle/**/*": true,
+    "intellij/.idea/**/*": true,
+    "intellij/build/**/*": true
+  }
 } 

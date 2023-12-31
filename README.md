@@ -1,3 +1,4 @@
+<!-- Plugin description -->
 <p align="center">
 <img src ="https://github.com/michaelangeloio/does-it-throw/blob/main/assets/icon-small.png?raw=true" width='350'>
 </p>
@@ -69,3 +70,4 @@ Please use the GitHub discussions tab to provide feedback and suggestions. Thank
 
 ## License
 MIT - See [LICENSE](https://github.com/michaelangeloio/does-it-throw/blob/main/LICENSE.txt) for more information.
+<!-- Plugin description end -->
