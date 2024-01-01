@@ -22,6 +22,10 @@
     },
     "crates/does-it-throw-wasm": {
       "release-type": "rust"
+    },
+    "jetbrains": {
+      "release-type": "java",
+      "extra-files": ["gradle.properties"]
     }
   },
   "bootstrap-sha": "89c1833c752211c7e712ef926c3d14f85ac1a779",
