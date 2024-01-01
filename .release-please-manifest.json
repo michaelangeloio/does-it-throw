@@ -2,5 +2,6 @@
   "crates/does-it-throw": "0.1.15",
   "crates/does-it-throw-wasm": "0.1.15",
   ".": "0.3.3",
-  "server": "0.3.3"
+  "server": "0.3.3",
+  "jetbrains": "0.3.3"
 }

@@ -6,3 +6,6 @@ node_modules/
 
 .env
 *.tgz
+.idea
+*.pem
+*.crt
