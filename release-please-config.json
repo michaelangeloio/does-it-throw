@@ -25,6 +25,7 @@
     },
     "jetbrains": {
       "release-type": "simple",
+      "package-name": "does-it-throw-jetbrains",
       "extra-files": ["gradle.properties"]
     }
   },
