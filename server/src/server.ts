@@ -111,7 +111,7 @@ connection.onDidChangeConfiguration((change) => {
   }
 
   // Revalidate all open text documents
-  // biome-ignore lint/complexity/noForEach: <explanation>
+  // biome-ignore lint/complexity/noForEach: original vscode-languageserver code
   documents.all().forEach(validateTextDocument)
 })
 
