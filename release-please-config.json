@@ -24,7 +24,7 @@
       "release-type": "rust"
     },
     "jetbrains": {
-      "release-type": "java",
+      "release-type": "simple",
       "extra-files": ["gradle.properties"]
     }
   },
