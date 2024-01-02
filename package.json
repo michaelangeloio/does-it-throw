@@ -161,6 +161,7 @@
   "types": "index.d.ts",
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "eslint"
   ]
 }
