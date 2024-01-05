@@ -96,8 +96,7 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("233")
-        untilBuild.set("240.*")
+        sinceBuild = properties("pluginSinceBuild")
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         val readMe = layout.projectDirectory.file(file("${project.projectDir}/../README.md").path)
