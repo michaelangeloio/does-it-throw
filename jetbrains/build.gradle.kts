@@ -100,17 +100,27 @@ tasks {
         untilBuild.set("240.*")
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        val readMe = layout.projectDirectory.file(file("${project.projectDir}/../server/README.md").path)
+        val readMe = layout.projectDirectory.file(file("${project.projectDir}/../README.md").path)
         println("readMe sourceDir: $readMe")
         pluginDescription = providers.fileContents(readMe).asText.map {
-            val start = "<!-- Plugin description -->"
-            val end = "<!-- Plugin description end -->"
+            val start = "<!-- JetBrains Plugin description 1 -->"
+            val end = "<!-- JetBrains Plugin description end 1 -->"
 
             with (it.lines()) {
                 if (!containsAll(listOf(start, end))) {
                     throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
                 }
                 subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
+            }
+
+            val start2 = "<!-- JetBrains Plugin description 2 -->"
+            val end2 = "<!-- JetBrains Plugin description end 2 -->"
+
+            with (it.lines()) {
+                if (!containsAll(listOf(start2, end2))) {
+                    throw GradleException("Plugin description section not found in README.md:\n$start2 ... $end2")
+                }
+                subList(indexOf(start2) + 1, indexOf(end2)).joinToString("\n").let(::markdownToHTML)
             }
         }
 

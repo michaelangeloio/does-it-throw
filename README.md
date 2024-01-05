@@ -1,4 +1,4 @@
-<!-- Plugin description -->
+
 <p align="center">
 <img src ="https://github.com/michaelangeloio/does-it-throw/blob/main/assets/icon-small.png?raw=true" width='350'>
 </p>
@@ -8,10 +8,12 @@
   <img src="https://github.com/michaelangeloio/does-it-throw/actions/workflows/ts.yaml/badge.svg" alt="TypeScript Build Status">
 </p>
 
+<!-- JetBrains Plugin description 1 -->
 # Well, Does it Throw? 
 
 TLDR; This is a *blazingly* fast **lsp server** to find *throw statements* in your javascript code. It's written in Rust and based on [SWC](https://swc.rs/) 🔥. It works for most ECMAScript files, such as `.ts`, `.js`, `.tsx` and `.jsx`. 
 
+<!-- JetBrains Plugin description end 1 -->
 
 ### Check it out in action:
 
@@ -21,7 +23,7 @@ Also supports **call expressions**:
 
 ![demo](./assets/calltothrow.gif)
 
-
+<!-- JetBrains Plugin description 2 -->
 ## Why?
 
 Maybe you're working on a large codebase riddled with throw statements everywhere, and you want a better control flow. Or perhaps you're just curious about how many throw statements you have in your codebase. This simple tool can help you with that.
@@ -38,7 +40,7 @@ Untyped `throw` statements can be a pain for those who come from languages like 
 | VsCode  | [Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelangeloio.does-it-throw-vscode) |
 | Neovim	| [Neovim Installation Docs](https://github.com/michaelangeloio/does-it-throw/blob/main/docs/neovim.md) |
 | LSP Server | [NPM](https://www.npmjs.com/package/does-it-throw-lsp) |
-| JetBrains | Coming soon... |
+| JetBrains | [Marketplace](https://plugins.jetbrains.com/plugin/23434-does-it-throw-?noRedirect=true) |
 
 > This extension is built with security in mind. It doesn't send any data to any third party servers. All publishes are done via a signed immutable commit from the [CI pipeline](https://github.com/michaelangeloio/does-it-throw/actions/workflows/release-vsix.yaml).
 
@@ -70,4 +72,4 @@ Please use the GitHub discussions tab to provide feedback and suggestions. Thank
 
 ## License
 MIT - See [LICENSE](https://github.com/michaelangeloio/does-it-throw/blob/main/LICENSE.txt) for more information.
-<!-- Plugin description end -->
+<!-- JetBrains Plugin description end 2 -->
