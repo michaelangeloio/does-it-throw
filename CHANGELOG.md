@@ -1,23 +1,5 @@
 # Changelog
 
-## [0.4.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.3.3...does-it-throw-vscode-v0.4.0) (2024-01-05)
-
-
-### Features
-
-* **deps-dev:** bump mockall from 0.12.0 to 0.12.1 ([#101](https://github.com/michaelangeloio/does-it-throw/issues/101)) ([211b21f](https://github.com/michaelangeloio/does-it-throw/commit/211b21f402d94b8bbf26e92b0185aeb5b1b0d196))
-* **deps-dev:** bump typescript from 5.2.2 to 5.3.3 ([#102](https://github.com/michaelangeloio/does-it-throw/issues/102)) ([5f45eff](https://github.com/michaelangeloio/does-it-throw/commit/5f45eff8493f674470331c252bdfc2f558d96c3f))
-* **deps:** bump serde_json from 1.0.108 to 1.0.109 ([#109](https://github.com/michaelangeloio/does-it-throw/issues/109)) ([5a28b3f](https://github.com/michaelangeloio/does-it-throw/commit/5a28b3f26992c4bca9d7bb276efdd27fa5b9a53a))
-* **deps:** bump swc_ecma_parser from 0.141.33 to 0.141.34 ([#110](https://github.com/michaelangeloio/does-it-throw/issues/110)) ([482be78](https://github.com/michaelangeloio/does-it-throw/commit/482be78a20732f350377d4e534afae1053080e58))
-* initial jetbrains/intellij support ([#104](https://github.com/michaelangeloio/does-it-throw/issues/104)) ([455d763](https://github.com/michaelangeloio/does-it-throw/commit/455d7635128646c57bbbc5811b75a526cb8adc64))
-
-
-### Bug Fixes
-
-* adjust readme to adhere to jetbrains marketplace guidelines ([#115](https://github.com/michaelangeloio/does-it-throw/issues/115)) ([6d68139](https://github.com/michaelangeloio/does-it-throw/commit/6d68139151f43f06033fd4517baee5c3d53e287c))
-* release please setup for jetbrains ([#107](https://github.com/michaelangeloio/does-it-throw/issues/107)) ([df6b9bb](https://github.com/michaelangeloio/does-it-throw/commit/df6b9bba97d79c1bf0cdda6d306403cd2cd8707e))
-* rename jetbrains release-please package name ([#108](https://github.com/michaelangeloio/does-it-throw/issues/108)) ([92791a2](https://github.com/michaelangeloio/does-it-throw/commit/92791a2abc7f29f3087460229f6c5a4ee93c62dc))
-
 ## [0.3.3](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-vscode-v0.3.2...does-it-throw-vscode-v0.3.3) (2023-12-24)
 
 

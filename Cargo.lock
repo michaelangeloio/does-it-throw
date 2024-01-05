@@ -93,7 +93,7 @@ dependencies = [
 
 [[package]]
 name = "does-it-throw-wasm"
-version = "0.2.0"
+version = "0.1.15"
 dependencies = [
  "does-it-throw",
  "mockall",

@@ -2,19 +2,6 @@
 
 ## Unreleased
 
-## [0.4.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-jetbrains-v0.3.3...does-it-throw-jetbrains-v0.4.0) (2024-01-05)
-
-
-### Features
-
-* initial jetbrains/intellij support ([#104](https://github.com/michaelangeloio/does-it-throw/issues/104)) ([455d763](https://github.com/michaelangeloio/does-it-throw/commit/455d7635128646c57bbbc5811b75a526cb8adc64))
-
-
-### Bug Fixes
-
-* adjust readme to adhere to jetbrains marketplace guidelines ([#115](https://github.com/michaelangeloio/does-it-throw/issues/115)) ([6d68139](https://github.com/michaelangeloio/does-it-throw/commit/6d68139151f43f06033fd4517baee5c3d53e287c))
-* release please setup for jetbrains ([#107](https://github.com/michaelangeloio/does-it-throw/issues/107)) ([df6b9bb](https://github.com/michaelangeloio/does-it-throw/commit/df6b9bba97d79c1bf0cdda6d306403cd2cd8707e))
-
 ## 0.3.3(https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-lsp-v0.3.2...does-it-throw-lsp-v0.3.3) (2023-12-24)
 
 ### Bug Fixes
