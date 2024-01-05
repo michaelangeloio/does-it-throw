@@ -103,25 +103,30 @@ tasks {
         val readMe = layout.projectDirectory.file(file("${project.projectDir}/../README.md").path)
         println("readMe sourceDir: $readMe")
         pluginDescription = providers.fileContents(readMe).asText.map {
-            val start = "<!-- JetBrains Plugin description 1 -->"
-            val end = "<!-- JetBrains Plugin description end 1 -->"
+          val start1 = "<!-- JetBrains Plugin description 1 -->"
+          val end1 = "<!-- JetBrains Plugin description end 1 -->"
+          val start2 = "<!-- JetBrains Plugin description 2 -->"
+          val end2 = "<!-- JetBrains Plugin description end 2 -->"
+      
+          val lines = it.lines()
+      
+          // Function to extract and convert content between start and end markers
+          fun extractAndConvert(start: String, end: String): String {
+              if (!lines.containsAll(listOf(start, end))) {
+                  throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+              }
+              return lines.subList(lines.indexOf(start) + 1, lines.indexOf(end)).joinToString("\n").let(::markdownToHTML)
+          }
+      
+          // Extract and convert both sections
+          val content1 = extractAndConvert(start1, end1)
+          val content2 = extractAndConvert(start2, end2)
 
-            with (it.lines()) {
-                if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
-                }
-                subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
-            }
-
-            val start2 = "<!-- JetBrains Plugin description 2 -->"
-            val end2 = "<!-- JetBrains Plugin description end 2 -->"
-
-            with (it.lines()) {
-                if (!containsAll(listOf(start2, end2))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start2 ... $end2")
-                }
-                subList(indexOf(start2) + 1, indexOf(end2)).joinToString("\n").let(::markdownToHTML)
-            }
+          val readMeContent = "$content1\n$content2"
+          println("readMe content: $readMeContent")
+      
+          // Combine both contents
+          readMeContent
         }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
