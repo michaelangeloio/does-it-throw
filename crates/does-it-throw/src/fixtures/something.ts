@@ -1,7 +1,7 @@
-export const SomeThrow = () => {
+export const someThrow = () => {
     throw new Error('never gonna let you down');
 }
 
-export function Something () {
-  throw new Error('never gonna run around and desert you')
-}
+export function CallToThrow () {
+    someThrow()
+} 
