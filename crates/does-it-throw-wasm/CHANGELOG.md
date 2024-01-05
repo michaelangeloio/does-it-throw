@@ -8,6 +8,15 @@
   * dependencies
     * does-it-throw bumped from 0.1.14 to 0.1.15
 
+## [0.2.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-wasm-v0.1.15...does-it-throw-wasm-v0.2.0) (2024-01-05)
+
+
+### Features
+
+* **deps-dev:** bump mockall from 0.12.0 to 0.12.1 ([#101](https://github.com/michaelangeloio/does-it-throw/issues/101)) ([211b21f](https://github.com/michaelangeloio/does-it-throw/commit/211b21f402d94b8bbf26e92b0185aeb5b1b0d196))
+* **deps:** bump serde_json from 1.0.108 to 1.0.109 ([#109](https://github.com/michaelangeloio/does-it-throw/issues/109)) ([5a28b3f](https://github.com/michaelangeloio/does-it-throw/commit/5a28b3f26992c4bca9d7bb276efdd27fa5b9a53a))
+* **deps:** bump swc_ecma_parser from 0.141.33 to 0.141.34 ([#110](https://github.com/michaelangeloio/does-it-throw/issues/110)) ([482be78](https://github.com/michaelangeloio/does-it-throw/commit/482be78a20732f350377d4e534afae1053080e58))
+
 ## [0.1.13](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-wasm-v0.1.12...does-it-throw-wasm-v0.1.13) (2023-12-17)
 
 
