@@ -960,4 +960,25 @@ mod integration_tests {
     assert_eq!(result.calls_to_throws.len(), 0);
   }
 
+  #[test]
+  fn test_should_not_include_throws_for_ignore_statements_js () {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/ignoreStatements.js", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let ignore_statements = vec![
+      "@it-throws".to_string(),
+      "@it-throws-ignore".to_string(),
+      "@some-random-ignore".to_string(),
+    ];
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+      ignore_statements,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 0);
+    assert_eq!(result.calls_to_throws.len(), 0);
+  }
 }
