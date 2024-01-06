@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.15...does-it-throw-v0.2.0) (2024-01-06)
+
+
+### Features
+
+* user can now discard warnings with ignore statements ([#118](https://github.com/michaelangeloio/does-it-throw/issues/118)) ([3f8957c](https://github.com/michaelangeloio/does-it-throw/commit/3f8957c60fd90f9ab7b6646c04ec22dcecb21556))
+
 ## [0.1.15](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.14...does-it-throw-v0.1.15) (2023-12-24)
 
 

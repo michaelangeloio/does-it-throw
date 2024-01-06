@@ -1,7 +1,7 @@
 {
   "name": "does-it-throw-lsp",
   "description": "Language Server for Does It Throw",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "//": "target-version: 0.3.4",
   "author": {
     "name": "Michael Angelo Rivera",
