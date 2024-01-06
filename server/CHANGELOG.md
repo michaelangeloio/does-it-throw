@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-lsp-v0.3.3...does-it-throw-lsp-v0.4.0) (2024-01-06)
+
+
+### Features
+
+* **deps-dev:** bump typescript from 5.2.2 to 5.3.3 ([#102](https://github.com/michaelangeloio/does-it-throw/issues/102)) ([5f45eff](https://github.com/michaelangeloio/does-it-throw/commit/5f45eff8493f674470331c252bdfc2f558d96c3f))
+* **deps:** bump serde_json from 1.0.108 to 1.0.109 ([#109](https://github.com/michaelangeloio/does-it-throw/issues/109)) ([5a28b3f](https://github.com/michaelangeloio/does-it-throw/commit/5a28b3f26992c4bca9d7bb276efdd27fa5b9a53a))
+* **deps:** bump swc_ecma_parser from 0.141.33 to 0.141.34 ([#110](https://github.com/michaelangeloio/does-it-throw/issues/110)) ([482be78](https://github.com/michaelangeloio/does-it-throw/commit/482be78a20732f350377d4e534afae1053080e58))
+* user can now discard warnings with ignore statements ([#118](https://github.com/michaelangeloio/does-it-throw/issues/118)) ([3f8957c](https://github.com/michaelangeloio/does-it-throw/commit/3f8957c60fd90f9ab7b6646c04ec22dcecb21556))
+
 ## [0.3.3](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-lsp-v0.3.2...does-it-throw-lsp-v0.3.3) (2023-12-24)
 
 

@@ -83,7 +83,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "does-it-throw"
-version = "0.1.15"
+version = "0.2.0"
 dependencies = [
  "swc_common",
  "swc_ecma_ast",
@@ -93,7 +93,7 @@ dependencies = [
 
 [[package]]
 name = "does-it-throw-wasm"
-version = "0.1.15"
+version = "0.2.0"
 dependencies = [
  "does-it-throw",
  "mockall",
