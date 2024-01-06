@@ -3,6 +3,7 @@ pub mod import_usage_finder;
 pub mod throw_finder;
 use call_finder::{CallFinder, CallToThrowMap};
 use import_usage_finder::ImportUsageFinder;
+use swc_common::comments::SingleThreadedComments;
 use throw_finder::{IdentifierUsage, ThrowAnalyzer, ThrowMap};
 extern crate swc_common;
 extern crate swc_ecma_ast;
@@ -59,6 +60,7 @@ pub fn analyze_code(
   user_settings: &UserSettings,
 ) -> (AnalysisResult, Lrc<SourceMap>) {
   let fm = cm.new_source_file(swc_common::FileName::Anon, content.into());
+  let comments = Lrc::new(SingleThreadedComments::default());
   let lexer = Lexer::new(
     Syntax::Typescript(swc_ecma_parser::TsConfig {
       tsx: true,
@@ -69,12 +71,13 @@ pub fn analyze_code(
     }),
     EsVersion::latest(),
     StringInput::from(&*fm),
-    None,
+    Some(&comments),
   );
 
   let mut parser = Parser::new_from(lexer);
   let module = parser.parse_module().expect("Failed to parse module");
   let mut throw_collector = ThrowAnalyzer {
+    comments: comments.clone(),
     functions_with_throws: HashSet::new(),
     json_parse_calls: vec![],
     fs_access_calls: vec![],

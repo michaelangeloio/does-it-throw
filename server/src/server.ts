@@ -195,7 +195,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       const filePromises = analysis.relative_imports.map(async (relative_import) => {
         try {
           const file = await findFirstFileThatExists(textDocument.uri, relative_import)
-          return await readFile(file, 'utf-8')
+          return {
+            fileContent: await readFile(file, 'utf-8'),
+            fileUri: file
+          }
         } catch (e) {
           connection.console.log(`Error reading file ${inspect(e)}`)
           return undefined
@@ -207,8 +210,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
           return undefined
         }
         const opts = {
-          uri: textDocument.uri,
-          file_content: file,
+          uri: file.fileUri,
+          file_content: file.fileContent,
           ids_to_check: [],
           typescript_settings: {
             decorators: true
