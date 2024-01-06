@@ -46,6 +46,10 @@ Untyped `throw` statements can be a pain for those who come from languages like 
 
 > The core of the code is written in Rust, and the LSP implementation for VsCode is written in Typescript. The Rust code is compiled to WASM and bundled with the VsCode extension. The extension is published to the VsCode marketplace, and the Rust code is published to [crates.io](https://crates.io/crates/does-it-throw). 
 
+## Usage
+
+For a usage and configuration guide, check out the [usage](https://github.com/michaelangeloio/does-it-throw/blob/main/docs/usage.md) page!
+
 
 ## Limitations
 

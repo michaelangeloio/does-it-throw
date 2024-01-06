@@ -11,6 +11,7 @@ pub fn main() {
   let cm: Lrc<SourceMap> = Default::default();
   let user_settings = UserSettings {
     include_try_statement_throws: false,
+    ignore_statements: vec!["@it-throws".to_string()],
   };
   let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
   for import in result.import_sources.into_iter() {
@@ -79,6 +80,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -140,6 +142,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -201,6 +204,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -257,6 +261,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -314,6 +319,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -370,6 +376,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -425,6 +432,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -485,6 +493,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -537,6 +546,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -589,6 +599,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -640,6 +651,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -686,6 +698,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -758,6 +771,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: true,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -814,7 +828,7 @@ mod integration_tests {
   }
 
   #[test]
-  fn test_try_statement_does_not_include_all_throws () {
+  fn test_try_statement_does_not_include_all_throws() {
     // This test is the same as test_try_statement but with include_try_statement_throws set to false
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let file_path = format!("{}/src/fixtures/tryStatement.ts", manifest_dir);
@@ -824,6 +838,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -840,6 +855,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: true,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -851,7 +867,7 @@ mod integration_tests {
   }
 
   #[test]
-  fn test_try_statement_nested_does_not_include_throws () {
+  fn test_try_statement_nested_does_not_include_throws() {
     // We need to test the following conditions:
     // 1. include_try_statement_throws = false
     // 2. a nested try statement that throws that ISNT caught by the parent try statement
@@ -864,6 +880,7 @@ mod integration_tests {
     let cm: Lrc<SourceMap> = Default::default();
     let user_settings = UserSettings {
       include_try_statement_throws: false,
+      ignore_statements: vec!["@it-throws".to_string()],
     };
     let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
 
@@ -883,5 +900,85 @@ mod integration_tests {
     ["parentCatchThatisNotCaught", "throwInsideCatch"]
       .iter()
       .for_each(|f| assert!(function_names_contains(&function_names, f)));
+  }
+
+  #[test]
+  fn test_should_include_throws_for_no_ignore_statements() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/ignoreStatements.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+      ignore_statements: vec![],
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 11);
+    assert_eq!(result.calls_to_throws.len(), 15);
+  }
+
+  #[test]
+  fn test_should_include_throws_for_no_ignore_statements_js() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/ignoreStatements.js", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+      ignore_statements: vec![],
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 6);
+    assert_eq!(result.calls_to_throws.len(), 7);
+  }
+
+  #[test]
+  fn test_should_not_include_throws_for_ignore_statements () {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/ignoreStatements.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let ignore_statements = vec![
+      "@it-throws".to_string(),
+      "@it-throws-ignore".to_string(),
+      "@some-random-ignore".to_string(),
+    ];
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+      ignore_statements,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 0);
+    assert_eq!(result.calls_to_throws.len(), 0);
+  }
+
+  #[test]
+  fn test_should_not_include_throws_for_ignore_statements_js () {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/ignoreStatements.js", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let ignore_statements = vec![
+      "@it-throws".to_string(),
+      "@it-throws-ignore".to_string(),
+      "@some-random-ignore".to_string(),
+    ];
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+      ignore_statements,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 0);
+    assert_eq!(result.calls_to_throws.len(), 0);
   }
 }

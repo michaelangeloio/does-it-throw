@@ -128,6 +128,15 @@
           "default": false,
           "description": "Include throw statements inside try statements."
         },
+        "doesItThrow.ignoreStatements": {
+          "scope": "resource",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["@it-throws", "@does-it-throw-ignore"],
+          "description": "Ignore throw statements with comments above that match these strings."
+        },
         "doesItThrow.trace.server": {
           "scope": "window",
           "type": "string",

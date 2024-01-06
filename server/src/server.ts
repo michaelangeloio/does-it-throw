@@ -82,6 +82,7 @@ interface Settings {
   callToThrowSeverity: DiagnosticSeverity
   callToImportedThrowSeverity: DiagnosticSeverity
   includeTryStatementThrows: boolean
+  ignoreStatements: string[]
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
@@ -93,7 +94,8 @@ const defaultSettings: Settings = {
   functionThrowSeverity: 'Hint',
   callToThrowSeverity: 'Hint',
   callToImportedThrowSeverity: 'Hint',
-  includeTryStatementThrows: false
+  includeTryStatementThrows: false,
+  ignoreStatements: ['@it-throws', '@does-it-throw-ignore']
 }
 // 👆 very unlikely someone will have more than 1 million throw statements, lol
 // if you do, might want to rethink your code?
@@ -187,7 +189,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       call_to_imported_throw_severity:
         settings?.callToImportedThrowSeverity ?? defaultSettings.callToImportedThrowSeverity,
       call_to_throw_severity: settings?.callToThrowSeverity ?? defaultSettings.callToThrowSeverity,
-      include_try_statement_throws: settings?.includeTryStatementThrows ?? defaultSettings.includeTryStatementThrows
+      include_try_statement_throws: settings?.includeTryStatementThrows ?? defaultSettings.includeTryStatementThrows,
+      ignore_statements: settings?.ignoreStatements ?? defaultSettings.ignoreStatements
     } satisfies InputData
     const analysis = parse_js(opts) as ParseResult
 
@@ -195,7 +198,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       const filePromises = analysis.relative_imports.map(async (relative_import) => {
         try {
           const file = await findFirstFileThatExists(textDocument.uri, relative_import)
-          return await readFile(file, 'utf-8')
+          return {
+            fileContent: await readFile(file, 'utf-8'),
+            fileUri: file
+          }
         } catch (e) {
           connection.console.log(`Error reading file ${inspect(e)}`)
           return undefined
@@ -207,8 +213,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
           return undefined
         }
         const opts = {
-          uri: textDocument.uri,
-          file_content: file,
+          uri: file.fileUri,
+          file_content: file.fileContent,
           ids_to_check: [],
           typescript_settings: {
             decorators: true

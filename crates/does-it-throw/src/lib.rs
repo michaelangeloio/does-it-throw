@@ -3,7 +3,8 @@ pub mod import_usage_finder;
 pub mod throw_finder;
 use call_finder::{CallFinder, CallToThrowMap};
 use import_usage_finder::ImportUsageFinder;
-use throw_finder::{IdentifierUsage, ThrowAnalyzer, ThrowMap};
+use swc_common::comments::SingleThreadedComments;
+use throw_finder::{IdentifierUsage, ThrowAnalyzer, ThrowMap, ThrowFinderSettings};
 extern crate swc_common;
 extern crate swc_ecma_ast;
 extern crate swc_ecma_parser;
@@ -29,13 +30,13 @@ pub struct AnalysisResult {
   pub imported_identifier_usages: HashSet<IdentifierUsage>,
 }
 
-struct CombinedAnalyzers {
-  throw_analyzer: ThrowAnalyzer,
+struct CombinedAnalyzers<'throwfinder_settings>  {
+  throw_analyzer: ThrowAnalyzer<'throwfinder_settings>,
   call_finder: CallFinder,
   import_usage_finder: ImportUsageFinder,
 }
 
-impl From<CombinedAnalyzers> for AnalysisResult {
+impl <'throwfinder_settings> From<CombinedAnalyzers<'throwfinder_settings>> for AnalysisResult {
   fn from(analyzers: CombinedAnalyzers) -> Self {
     Self {
       functions_with_throws: analyzers.throw_analyzer.functions_with_throws,
@@ -51,6 +52,7 @@ impl From<CombinedAnalyzers> for AnalysisResult {
 
 pub struct UserSettings {
   pub include_try_statement_throws: bool,
+  pub ignore_statements: Vec<String>,
 }
 
 pub fn analyze_code(
@@ -59,6 +61,7 @@ pub fn analyze_code(
   user_settings: &UserSettings,
 ) -> (AnalysisResult, Lrc<SourceMap>) {
   let fm = cm.new_source_file(swc_common::FileName::Anon, content.into());
+  let comments = Lrc::new(SingleThreadedComments::default());
   let lexer = Lexer::new(
     Syntax::Typescript(swc_ecma_parser::TsConfig {
       tsx: true,
@@ -69,12 +72,13 @@ pub fn analyze_code(
     }),
     EsVersion::latest(),
     StringInput::from(&*fm),
-    None,
+    Some(&comments),
   );
 
   let mut parser = Parser::new_from(lexer);
   let module = parser.parse_module().expect("Failed to parse module");
   let mut throw_collector = ThrowAnalyzer {
+    comments: comments.clone(),
     functions_with_throws: HashSet::new(),
     json_parse_calls: vec![],
     fs_access_calls: vec![],
@@ -83,7 +87,10 @@ pub fn analyze_code(
     function_name_stack: vec![],
     current_class_name: None,
     current_method_name: None,
-    include_try_statement: user_settings.include_try_statement_throws,
+    throwfinder_settings: ThrowFinderSettings {
+      ignore_statements: &user_settings.ignore_statements.clone(),
+      include_try_statements: &user_settings.include_try_statement_throws.clone(),
+    }
   };
   throw_collector.visit_module(&module);
   let mut call_collector = CallFinder {
