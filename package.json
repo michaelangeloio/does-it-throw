@@ -135,7 +135,7 @@
             "type": "string"
           },
           "default": ["@it-throws", "@does-it-throw-ignore"],
-          "description": "Ignore throw statements with comments that match these strings."
+          "description": "Ignore throw statements with comments above that match these strings."
         },
         "doesItThrow.trace.server": {
           "scope": "window",

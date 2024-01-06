@@ -1,4 +1,9 @@
 {
   "doesItThrow.trace.server": "verbose",
-  "doesItThrow.includeTryStatementThrows": false
+  "doesItThrow.includeTryStatementThrows": false,
+  "doesItThrow.ignoreStatements": [
+    "@it-throws",
+    "@does-it-throw-ignore",
+    "@some-random-ignore"
+  ]
 }

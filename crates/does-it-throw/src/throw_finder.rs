@@ -13,7 +13,7 @@ use swc_ecma_ast::{
   VarDeclarator,
 };
 
-use self::swc_common::{Span, comments::Comments, sync::Lrc};
+use self::swc_common::{comments::Comments, sync::Lrc, Span};
 use self::swc_ecma_ast::{
   CallExpr, Expr, Function, ImportDecl, ImportSpecifier, MemberProp, ModuleExportName, ThrowStmt,
 };
@@ -35,38 +35,60 @@ struct BlockContext {
   catch_count: usize,
 }
 
-pub struct ThrowFinder {
+pub struct ThrowFinderSettings<'throwfinder_settings> {
+  pub include_try_statements: &'throwfinder_settings bool,
+  pub ignore_statements: &'throwfinder_settings Vec<String>,
+}
+
+impl<'throwfinder_settings> Clone for ThrowFinderSettings<'throwfinder_settings> {
+  fn clone(&self) -> ThrowFinderSettings<'throwfinder_settings> {
+      ThrowFinderSettings {
+          include_try_statements: self.include_try_statements,
+          ignore_statements: self.ignore_statements,
+      }
+  }
+}
+
+pub struct ThrowFinder<'throwfinder_settings> {
   comments: Lrc<dyn Comments>,
   pub throw_spans: Vec<Span>,
   context_stack: Vec<BlockContext>, // Stack to track try/catch context
-  pub include_try_statements: bool,
+  pub throwfinder_settings: &'throwfinder_settings ThrowFinderSettings<'throwfinder_settings>,
 }
 
-impl ThrowFinder {
+impl<'throwfinder_settings> ThrowFinder<'throwfinder_settings> {
   fn current_context(&self) -> Option<&BlockContext> {
     self.context_stack.last()
   }
 
-  pub fn new(include_try_statements: bool, comments: Lrc<dyn Comments>) -> Self {
+  pub fn new(throwfinder_settings: &'throwfinder_settings ThrowFinderSettings<'throwfinder_settings>, comments: Lrc<dyn Comments>) -> Self {
     Self {
       comments,
       throw_spans: vec![],
       context_stack: vec![],
-      include_try_statements,
+      throwfinder_settings,
     }
   }
 }
 
-impl Visit for ThrowFinder {
+impl<'throwfinder_settings> Visit for ThrowFinder<'throwfinder_settings> {
   fn visit_throw_stmt(&mut self, node: &ThrowStmt) {
-
-    let keywords = ["@it-throws"];
-    let has_it_throws_comment = self.comments.get_leading(node.span.lo())
-    .filter(|comments| comments.iter().any(|c| keywords.iter().any(|&keyword| c.text.contains(keyword))))
-    .is_some();
+    let has_it_throws_comment = self
+      .comments
+      .get_leading(node.span.lo())
+      .filter(|comments| {
+        comments.iter().any(|c| {
+          self
+            .throwfinder_settings
+            .ignore_statements
+            .iter()
+            .any(|keyword| c.text.contains(&**keyword))
+        })
+      })
+      .is_some();
 
     if !has_it_throws_comment {
-      if self.include_try_statements {
+      if *self.throwfinder_settings.include_try_statements {
         self.throw_spans.push(node.span);
       } else {
         let context = self.current_context();
@@ -161,7 +183,8 @@ impl Hash for ThrowMap {
   }
 }
 
-pub struct ThrowAnalyzer {
+pub struct ThrowAnalyzer<'ignorestmt_lt> {
+  pub comments: Lrc<dyn Comments>,
   pub functions_with_throws: HashSet<ThrowMap>,
   pub json_parse_calls: Vec<String>,
   pub fs_access_calls: Vec<String>,
@@ -170,13 +193,12 @@ pub struct ThrowAnalyzer {
   pub function_name_stack: Vec<String>,
   pub current_class_name: Option<String>,
   pub current_method_name: Option<String>,
-  pub include_try_statement: bool,
-  pub comments: Lrc<dyn Comments>,
+  pub throwfinder_settings: ThrowFinderSettings<'ignorestmt_lt>,
 }
 
-impl ThrowAnalyzer {
+impl<'throwfinder_settings> ThrowAnalyzer<'throwfinder_settings> {
   fn check_function_for_throws(&mut self, function: &Function) {
-    let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+    let mut throw_finder = ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
     throw_finder.visit_function(function);
     if !throw_finder.throw_spans.is_empty() {
       let throw_map = ThrowMap {
@@ -206,7 +228,7 @@ impl ThrowAnalyzer {
   }
 
   fn check_arrow_function_for_throws(&mut self, arrow_function: &ArrowExpr) {
-    let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+    let mut throw_finder = ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
     throw_finder.visit_arrow_expr(arrow_function);
     if !throw_finder.throw_spans.is_empty() {
       let throw_map = ThrowMap {
@@ -236,7 +258,7 @@ impl ThrowAnalyzer {
   }
 
   fn check_constructor_for_throws(&mut self, constructor: &Constructor) {
-    let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+    let mut throw_finder = ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
     throw_finder.visit_constructor(constructor);
     if !throw_finder.throw_spans.is_empty() {
       let throw_map = ThrowMap {
@@ -297,7 +319,7 @@ impl ThrowAnalyzer {
 // Its primary goal is to identify functions that throw exceptions and record their context.
 // It also records the usage of imported identifiers to help identify the context of function calls.
 
-impl Visit for ThrowAnalyzer {
+impl<'throwfinder_settings> Visit for ThrowAnalyzer<'throwfinder_settings> {
   fn visit_call_expr(&mut self, call: &CallExpr) {
     if let Callee::Expr(expr) = &call.callee {
       match &**expr {
@@ -346,7 +368,7 @@ impl Visit for ThrowAnalyzer {
         }
 
         Expr::Arrow(arrow_expr) => {
-          let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+          let mut throw_finder = ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
           throw_finder.visit_arrow_expr(arrow_expr);
           if !throw_finder.throw_spans.is_empty() {
             let throw_map = ThrowMap {
@@ -400,7 +422,8 @@ impl Visit for ThrowAnalyzer {
 
               self.function_name_stack.push(method_name.clone());
 
-              let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+              let mut throw_finder =
+                ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
               throw_finder.visit_function(&method_prop.function);
 
               if !throw_finder.throw_spans.is_empty() {
@@ -427,7 +450,8 @@ impl Visit for ThrowAnalyzer {
           if let Prop::KeyValue(key_value_prop) = &**prop {
             match &*key_value_prop.value {
               Expr::Fn(fn_expr) => {
-                let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+                let mut throw_finder =
+                  ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
                 throw_finder.visit_function(&fn_expr.function);
                 let function_name = prop_name_to_string(&key_value_prop.key);
 
@@ -450,7 +474,8 @@ impl Visit for ThrowAnalyzer {
                 }
               }
               Expr::Arrow(arrow_expr) => {
-                let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+                let mut throw_finder =
+                  ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
                 throw_finder.visit_arrow_expr(arrow_expr);
                 let function_name = prop_name_to_string(&key_value_prop.key);
 
@@ -486,7 +511,8 @@ impl Visit for ThrowAnalyzer {
     if let Some(ident) = &declarator.name.as_ident() {
       if let Some(init) = &declarator.init {
         let function_name = ident.sym.to_string();
-        let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+        let throwfinder_settings_clone = self.throwfinder_settings.clone();
+        let mut throw_finder = ThrowFinder::new(&throwfinder_settings_clone, self.comments.clone());
 
         // Check if the init is a function expression or arrow function
         if let Expr::Fn(fn_expr) = &**init {
@@ -632,7 +658,7 @@ impl Visit for ThrowAnalyzer {
 
       self.function_name_stack.push(method_name.clone());
 
-      let mut throw_finder = ThrowFinder::new(self.include_try_statement, self.comments.clone());
+      let mut throw_finder = ThrowFinder::new(&self.throwfinder_settings, self.comments.clone());
       throw_finder.visit_class_method(class_method);
 
       if !throw_finder.throw_spans.is_empty() {

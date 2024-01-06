@@ -4,7 +4,7 @@ pub mod throw_finder;
 use call_finder::{CallFinder, CallToThrowMap};
 use import_usage_finder::ImportUsageFinder;
 use swc_common::comments::SingleThreadedComments;
-use throw_finder::{IdentifierUsage, ThrowAnalyzer, ThrowMap};
+use throw_finder::{IdentifierUsage, ThrowAnalyzer, ThrowMap, ThrowFinderSettings};
 extern crate swc_common;
 extern crate swc_ecma_ast;
 extern crate swc_ecma_parser;
@@ -30,13 +30,13 @@ pub struct AnalysisResult {
   pub imported_identifier_usages: HashSet<IdentifierUsage>,
 }
 
-struct CombinedAnalyzers {
-  throw_analyzer: ThrowAnalyzer,
+struct CombinedAnalyzers<'ignorestmt_lt>  {
+  throw_analyzer: ThrowAnalyzer<'ignorestmt_lt>,
   call_finder: CallFinder,
   import_usage_finder: ImportUsageFinder,
 }
 
-impl From<CombinedAnalyzers> for AnalysisResult {
+impl <'ignoretmt_lt> From<CombinedAnalyzers<'ignoretmt_lt>> for AnalysisResult {
   fn from(analyzers: CombinedAnalyzers) -> Self {
     Self {
       functions_with_throws: analyzers.throw_analyzer.functions_with_throws,
@@ -52,6 +52,7 @@ impl From<CombinedAnalyzers> for AnalysisResult {
 
 pub struct UserSettings {
   pub include_try_statement_throws: bool,
+  pub ignore_statements: Vec<String>,
 }
 
 pub fn analyze_code(
@@ -86,7 +87,10 @@ pub fn analyze_code(
     function_name_stack: vec![],
     current_class_name: None,
     current_method_name: None,
-    include_try_statement: user_settings.include_try_statement_throws,
+    throwfinder_settings: ThrowFinderSettings {
+      ignore_statements: &user_settings.ignore_statements.clone(),
+      include_try_statements: &user_settings.include_try_statement_throws.clone(),
+    }
   };
   throw_collector.visit_module(&module);
   let mut call_collector = CallFinder {

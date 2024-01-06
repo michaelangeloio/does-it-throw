@@ -404,6 +404,7 @@ interface InputData {
   call_to_throw_severity?: DiagnosticSeverityInput;
   call_to_imported_throw_severity?: DiagnosticSeverityInput;
   include_try_statement_throws?: boolean;
+  ignore_statements?: string[];
 }
 "#;
 
@@ -449,6 +450,7 @@ pub struct InputData {
   pub call_to_throw_severity: Option<DiagnosticSeverityInput>,
   pub call_to_imported_throw_severity: Option<DiagnosticSeverityInput>,
   pub include_try_statement_throws: Option<bool>,
+  pub ignore_statements: Option<Vec<String>>,
 }
 
 #[wasm_bindgen]
@@ -460,6 +462,7 @@ pub fn parse_js(data: JsValue) -> JsValue {
 
   let user_settings = UserSettings {
     include_try_statement_throws: input_data.include_try_statement_throws.unwrap_or(false),
+    ignore_statements: input_data.ignore_statements.clone().unwrap_or_else(Vec::new),
   };
 
   let (results, cm) = analyze_code(&input_data.file_content, cm, &user_settings);
