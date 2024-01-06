@@ -30,13 +30,13 @@ pub struct AnalysisResult {
   pub imported_identifier_usages: HashSet<IdentifierUsage>,
 }
 
-struct CombinedAnalyzers<'ignorestmt_lt>  {
-  throw_analyzer: ThrowAnalyzer<'ignorestmt_lt>,
+struct CombinedAnalyzers<'throwfinder_settings>  {
+  throw_analyzer: ThrowAnalyzer<'throwfinder_settings>,
   call_finder: CallFinder,
   import_usage_finder: ImportUsageFinder,
 }
 
-impl <'ignoretmt_lt> From<CombinedAnalyzers<'ignoretmt_lt>> for AnalysisResult {
+impl <'throwfinder_settings> From<CombinedAnalyzers<'throwfinder_settings>> for AnalysisResult {
   fn from(analyzers: CombinedAnalyzers) -> Self {
     Self {
       functions_with_throws: analyzers.throw_analyzer.functions_with_throws,

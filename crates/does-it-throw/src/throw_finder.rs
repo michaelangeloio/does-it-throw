@@ -183,7 +183,7 @@ impl Hash for ThrowMap {
   }
 }
 
-pub struct ThrowAnalyzer<'ignorestmt_lt> {
+pub struct ThrowAnalyzer<'throwfinder_settings> {
   pub comments: Lrc<dyn Comments>,
   pub functions_with_throws: HashSet<ThrowMap>,
   pub json_parse_calls: Vec<String>,
@@ -193,7 +193,7 @@ pub struct ThrowAnalyzer<'ignorestmt_lt> {
   pub function_name_stack: Vec<String>,
   pub current_class_name: Option<String>,
   pub current_method_name: Option<String>,
-  pub throwfinder_settings: ThrowFinderSettings<'ignorestmt_lt>,
+  pub throwfinder_settings: ThrowFinderSettings<'throwfinder_settings>,
 }
 
 impl<'throwfinder_settings> ThrowAnalyzer<'throwfinder_settings> {
