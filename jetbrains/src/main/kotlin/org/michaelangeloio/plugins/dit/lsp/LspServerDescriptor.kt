@@ -7,14 +7,23 @@ import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
 import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
 import com.intellij.javascript.nodejs.interpreter.wsl.WslNodeInterpreter
 import com.intellij.lang.javascript.service.JSLanguageServiceUtil
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.lsp.api.ProjectWideLspServerDescriptor
+import org.eclipse.lsp4j.ConfigurationItem
 import org.michaelangeloio.plugins.dit.DoesItThrowUtils
+
+private val LOG = logger<DoesItThrowLspServerDescriptor>()
 
 class DoesItThrowLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "Does it Throw?") {
 
+    override fun getWorkspaceConfiguration(item: ConfigurationItem): Any? {
+        LOG.info(item.scopeUri)
+        LOG.info("angelo testing")
+        return super.getWorkspaceConfiguration(item)
+    }
     override fun isSupportedFile(file: VirtualFile) = DoesItThrowUtils.isSupportedFileType(file)
 
     override fun createCommandLine(): GeneralCommandLine {
