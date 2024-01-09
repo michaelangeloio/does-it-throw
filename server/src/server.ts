@@ -19,45 +19,32 @@ const connection = createConnection(ProposedFeatures.all)
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
-// use if needed later
-// let hasDiagnosticRelatedInformationCapability = false
-
-let rootUri: string | undefined | null
 
 connection.onInitialize((params: InitializeParams) => {
-  const capabilities = params.capabilities
+  const capabilities = params.capabilities;
 
-  hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration)
-  hasWorkspaceFolderCapability = !!(capabilities.workspace && !!capabilities.workspace.workspaceFolders)
-  // use if needed later
-  // hasDiagnosticRelatedInformationCapability = !!(
-  // 	capabilities.textDocument &&
-  // 	capabilities.textDocument.publishDiagnostics &&
-  // 	capabilities.textDocument.publishDiagnostics.relatedInformation
-  // )
+	// Does the client support the `workspace/configuration` request?
+	// If not, we fall back using global settings.
+	hasConfigurationCapability = !!(
+		capabilities.workspace && !!capabilities.workspace.configuration
+	);
+	hasWorkspaceFolderCapability = !!(
+		capabilities.workspace && !!capabilities.workspace.workspaceFolders
+	);
 
-  const result: InitializeResult = {
-    capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental
-    }
-  }
-  if (params?.workspaceFolders && params.workspaceFolders.length > 1) {
-    throw new Error('This extension only supports one workspace folder at this time')
-  }
-  if (hasWorkspaceFolderCapability) {
-    result.capabilities.workspace = {
-      workspaceFolders: {
-        supported: false
-      }
-    }
-  }
-  if (!hasWorkspaceFolderCapability) {
-    rootUri = params.rootUri
-  } else {
-    rootUri = params?.workspaceFolders?.[0]?.uri
-  }
-
-  return result
+	const result: InitializeResult = {
+		capabilities: {
+			textDocumentSync: TextDocumentSyncKind.Incremental,
+		}
+	};
+	if (hasWorkspaceFolderCapability) {
+		result.capabilities.workspace = {
+			workspaceFolders: {
+				supported: true
+			}
+		};
+	}
+	return result;
 })
 
 connection.onInitialized(() => {
