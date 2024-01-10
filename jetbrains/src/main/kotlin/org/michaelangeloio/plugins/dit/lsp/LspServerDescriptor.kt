@@ -12,17 +12,42 @@ import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.lsp.api.ProjectWideLspServerDescriptor
-import org.eclipse.lsp4j.ConfigurationItem
+import org.eclipse.lsp4j.*
 import org.michaelangeloio.plugins.dit.DoesItThrowUtils
+import org.michaelangeloio.plugins.dit.settings.DoesItThrowSettings
 
 private val LOG = logger<DoesItThrowLspServerDescriptor>()
 
 class DoesItThrowLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "Does it Throw?") {
+    override val clientCapabilities: ClientCapabilities = super.clientCapabilities.apply {
+        textDocument = TextDocumentClientCapabilities().apply {
+            publishDiagnostics = PublishDiagnosticsCapabilities().apply {
+                versionSupport = true
+            }
+            hover = HoverCapabilities().apply {
+                contentFormat = listOf(MarkupKind.MARKDOWN, MarkupKind.PLAINTEXT)
+            }
+        }
+        workspace = workspace?.apply {
+            configuration = true
+            workspaceFolders = true
+            didChangeWatchedFiles = DidChangeWatchedFilesCapabilities().apply {
+                relativePatternSupport = true
+            }
+        }
+    }
 
-    override fun getWorkspaceConfiguration(item: ConfigurationItem): Any? {
+    override fun getWorkspaceConfiguration(item: ConfigurationItem): Any {
         LOG.info(item.scopeUri)
-        LOG.info("angelo testing")
-        return super.getWorkspaceConfiguration(item)
+        return mapOf(
+                "throwStatementSeverity" to "Error",
+                "functionThrowSeverity" to "Error",
+                "callToThrowSeverity" to "Error",
+                "callToImportedThrowSeverity" to "Error",
+                "includeTryStatementThrows" to DoesItThrowSettings.getInstance(project).includeTryStatementThrows,
+                "maxNumberOfProblems" to DoesItThrowSettings.getInstance(project).maxNumberOfProblems,
+                "ignoreStatements" to DoesItThrowSettings.getInstance(project).ignoreStatements
+        )
     }
     override fun isSupportedFile(file: VirtualFile) = DoesItThrowUtils.isSupportedFileType(file)
 
