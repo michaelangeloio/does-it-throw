@@ -40,10 +40,10 @@ class DoesItThrowLspServerDescriptor(project: Project) : ProjectWideLspServerDes
     override fun getWorkspaceConfiguration(item: ConfigurationItem): Any {
         LOG.info(item.scopeUri)
         return mapOf(
-                "throwStatementSeverity" to "Error",
-                "functionThrowSeverity" to "Error",
-                "callToThrowSeverity" to "Error",
-                "callToImportedThrowSeverity" to "Error",
+                "throwStatementSeverity" to DoesItThrowSettings.getInstance(project).throwStatementSeverity,
+                "functionThrowSeverity" to DoesItThrowSettings.getInstance(project).functionThrowSeverity,
+                "callToThrowSeverity" to DoesItThrowSettings.getInstance(project).callToThrowSeverity,
+                "callToImportedThrowSeverity" to DoesItThrowSettings.getInstance(project).callToImportedThrowSeverity,
                 "includeTryStatementThrows" to DoesItThrowSettings.getInstance(project).includeTryStatementThrows,
                 "maxNumberOfProblems" to DoesItThrowSettings.getInstance(project).maxNumberOfProblems,
                 "ignoreStatements" to DoesItThrowSettings.getInstance(project).ignoreStatements

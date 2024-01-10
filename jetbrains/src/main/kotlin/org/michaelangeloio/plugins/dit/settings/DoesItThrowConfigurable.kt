@@ -18,6 +18,7 @@ class DoesItThrowSettingsConfigurable(private val project: Project) :
 
     override fun createPanel(): DialogPanel = panel {
 
+
         row(DoesItThrowBundle.message("does-it-throw.settings.includeTryStatementThrows.label")) {
             checkBox("").bindSelected(settings::includeTryStatementThrows)
         }
@@ -32,6 +33,24 @@ class DoesItThrowSettingsConfigurable(private val project: Project) :
                     setter = { text -> settings.ignoreStatements = text.split("\n").filter { it.isNotBlank() } }
             )
             textArea.rows(10) // Sets the number of visible rows in the text area.
+        }
+
+        group("Severity Configuration") {
+            row{
+                label("Allowed Values: Information, Hint, Warning, Error")
+            }
+            row(DoesItThrowBundle.message("does-it-throw.settings.throwStatementSeverity.label")) {
+                textField().bindText(settings::throwStatementSeverity)
+            }
+            row (DoesItThrowBundle.message("does-it-throw.settings.functionThrowSeverity.label")) {
+                textField().bindText(settings::functionThrowSeverity)
+            }
+            row (DoesItThrowBundle.message("does-it-throw.settings.callToThrowSeverity.label")) {
+                textField().bindText(settings::callToThrowSeverity)
+            }
+            row (DoesItThrowBundle.message("does-it-throw.settings.callToImportedThrowSeverity.label")) {
+                textField().bindText(settings::callToImportedThrowSeverity)
+            }
         }
 
         onApply {
