@@ -3,16 +3,25 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.ultimate</depends>
     <depends>JavaScript</depends>
-    
+
+    <resource-bundle>messages.DoesItThrowBundle</resource-bundle>
+
     <id>org.michaelangeloio.plugins.dit</id>
     <name>Does it Throw?</name>
     <vendor>michaelangeloio</vendor>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="DoesItThrow" displayType="BALLOON"/>
         <!-- LSP -->
         <platform.lsp.serverSupportProvider implementation="org.michaelangeloio.plugins.dit.lsp.DoesItThrowLspServerSupportProvider"/>
+
+                <projectConfigurable id="Settings.DoesItThrowB"
+                             bundle="messages.DoesItThrowBundle"
+                             groupId="language"
+                             nonDefaultProject="false"
+                             key="does-it-throw.settings.name"
+                             instance="org.michaelangeloio.plugins.dit.settings.DoesItThrowSettingsConfigurable"/>
     </extensions>
     
 </idea-plugin>
