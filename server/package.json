@@ -32,7 +32,8 @@
     "lsp",
     "language server",
     "exceptions",
-    "extension"
+    "extension",
+    "exception finder"
   ],
   "qna": "https://github.com/michaelangeloio/does-it-throw/discussions",
   "dependencies": {

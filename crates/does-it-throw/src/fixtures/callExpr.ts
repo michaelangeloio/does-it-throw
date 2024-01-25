@@ -39,3 +39,11 @@ SomeRandomCall2(() => {
 connection.oneWithASecondArg({}, () => {
   throw new Error('hi khue')
 })
+
+const testGetter = {
+  get test() {
+    SomeThrow()
+  }
+}
+
+const array = [SomeThrow(), SomeThrow2()]
