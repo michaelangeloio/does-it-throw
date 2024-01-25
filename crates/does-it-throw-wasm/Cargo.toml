@@ -16,7 +16,7 @@ crate-type = ["cdylib"]
 does-it-throw = { path = "../does-it-throw", version = "0.2.0"}
 swc_common = "0.33"
 swc_ecma_parser = "0.141.34"
-swc_ecma_ast = "0.110.9"
+swc_ecma_ast = "0.110.17"
 swc_ecma_visit = "0.96"
 wasm-bindgen = {version = "0.2.74"}
 serde-wasm-bindgen = "0.6.1"
