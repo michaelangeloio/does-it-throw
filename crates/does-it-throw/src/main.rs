@@ -438,7 +438,7 @@ mod integration_tests {
 
     // general result assertions
     assert_eq!(result.functions_with_throws.len(), 5);
-    assert_eq!(result.calls_to_throws.len(), 7);
+    assert_eq!(result.calls_to_throws.len(), 10);
     assert_eq!(result.imported_identifier_usages.len(), 0);
     assert_eq!(result.import_sources.len(), 0);
 
@@ -467,18 +467,20 @@ mod integration_tests {
       .iter()
       .map(|c| c.id.clone())
       .collect();
-
     fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
       calls_to_throws.iter().any(|c| c == call_to_throw)
     }
     [
+      "connection-<anonymous>",
+      "NOT_SET-<anonymous>",
       "NOT_SET-onInitialized",
+      "NOT_SET-<anonymous>",
       "NOT_SET-SomeRandomCall2",
+      "NOT_SET-SomeRandomCall2",
+      "NOT_SET-onInitialized",
       "NOT_SET-<anonymous>",
       "connection-<anonymous>",
-      "NOT_SET-onInitialized",
-      "NOT_SET-SomeRandomCall2",
-      "connection-<anonymous>",
+      "NOT_SET-<anonymous>",
     ]
     .iter()
     .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
@@ -939,7 +941,7 @@ mod integration_tests {
   }
 
   #[test]
-  fn test_should_not_include_throws_for_ignore_statements () {
+  fn test_should_not_include_throws_for_ignore_statements() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let file_path = format!("{}/src/fixtures/ignoreStatements.ts", manifest_dir);
     // Read sample code from file
@@ -961,7 +963,7 @@ mod integration_tests {
   }
 
   #[test]
-  fn test_should_not_include_throws_for_ignore_statements_js () {
+  fn test_should_not_include_throws_for_ignore_statements_js() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let file_path = format!("{}/src/fixtures/ignoreStatements.js", manifest_dir);
     // Read sample code from file
@@ -980,5 +982,60 @@ mod integration_tests {
 
     assert_eq!(result.functions_with_throws.len(), 0);
     assert_eq!(result.calls_to_throws.len(), 0);
+  }
+
+  #[test]
+  fn test_should_handle_return_statements() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let file_path = format!("{}/src/fixtures/returnStatement.ts", manifest_dir);
+    // Read sample code from file
+    let sample_code = fs::read_to_string(file_path).expect("Something went wrong reading the file");
+    let ignore_statements = vec![
+      "@it-throws".to_string(),
+      "@it-throws-ignore".to_string(),
+      "@some-random-ignore".to_string(),
+    ];
+    let cm: Lrc<SourceMap> = Default::default();
+    let user_settings = UserSettings {
+      include_try_statement_throws: true,
+      ignore_statements,
+    };
+    let (result, _cm) = analyze_code(&sample_code, cm, &user_settings);
+
+    assert_eq!(result.functions_with_throws.len(), 2);
+    assert_eq!(result.calls_to_throws.len(), 7);
+
+    let function_names: Vec<String> = result
+      .functions_with_throws
+      .clone()
+      .into_iter()
+      .map(|f| f.function_or_method_name)
+      .collect();
+
+    fn function_names_contains(function_names: &Vec<String>, function_name: &str) -> bool {
+      function_names.iter().any(|f| f == function_name)
+    }
+
+    ["someThrow", "badMethod"]
+      .iter()
+      .for_each(|f| assert!(function_names_contains(&function_names, f)));
+
+    let calls_to_throws: Vec<String> = result.calls_to_throws.into_iter().map(|c| c.id).collect();
+
+    fn calls_to_throws_contains(calls_to_throws: &Vec<String>, call_to_throw: &str) -> bool {
+      calls_to_throws.iter().any(|c| c == call_to_throw)
+    }
+
+    [
+      "NOT_SET-callToSomeThrow",
+      "NOT_SET-callToSomeThrow",
+      "NOT_SET-callToSomeThrow",
+      "NOT_SET-test",
+      "NOT_SET-callToSomeThrow",
+      "NOT_SET-callToSomeThrow",
+      "Test-callToSomeThrow",
+    ]
+    .iter()
+    .for_each(|f| assert!(calls_to_throws_contains(&calls_to_throws, f)));
   }
 }

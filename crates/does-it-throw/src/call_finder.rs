@@ -3,7 +3,8 @@ extern crate swc_ecma_ast;
 extern crate swc_ecma_parser;
 extern crate swc_ecma_visit;
 
-use std::collections::HashSet;
+use std::collections::hash_map::DefaultHasher;
+use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 
 use swc_ecma_ast::{
@@ -47,6 +48,7 @@ impl Hash for CallToThrowMap {
 pub struct InstantiationsMap {
   pub class_name: String,
   pub variable_name: String,
+  pub instantiation_span: Span,
 }
 
 impl PartialEq for InstantiationsMap {
@@ -87,12 +89,36 @@ pub struct CallFinder {
   pub calls: HashSet<CallToThrowMap>,
   pub functions_with_throws: HashSet<ThrowMap>,
   pub current_class_name: Option<String>,
-  pub instantiations: HashSet<InstantiationsMap>,
+  pub instantiations: HashMap<String, InstantiationsMap>,
   pub function_name_stack: Vec<String>,
   pub object_property_stack: Vec<String>,
+  pub processed_calls: HashSet<u64>,
 }
 
 impl CallFinder {
+  // use the lo and hi of the Span to generate a unique ID so that we don't
+  // record duplicate calls
+  // We also use the instantiation span for instances to ensure uniqueness
+  // for calls to methods on instances
+  fn generate_unique_call_id(&self, call: &CallExpr) -> u64 {
+    let mut hasher = DefaultHasher::new();
+
+    if let Callee::Expr(expr) = &call.callee {
+        if let Expr::Member(member_expr) = &**expr {
+            if let Expr::Ident(instance_ident) = &*member_expr.obj {
+                if let Some(inst_map) = self.instantiations.get(&instance_ident.sym.to_string()) {
+                    // Use the instantiation span for instances
+                    inst_map.instantiation_span.hash(&mut hasher);
+                }
+            }
+        }
+    }
+
+    // Also hash the call span to ensure uniqueness
+    call.span.hash(&mut hasher);
+    hasher.finish()
+  }
+
   fn handle_bin_expr(&mut self, bin_expr: &BinExpr) {
     if let Expr::Call(call_expr) = &*bin_expr.left {
       self.visit_call_expr(call_expr);
@@ -204,6 +230,12 @@ impl Visit for CallFinder {
 
   fn visit_call_expr(&mut self, call: &CallExpr) {
     if let Callee::Expr(expr) = &call.callee {
+      let call_id = self.generate_unique_call_id(call);
+      // If we've already processed this call, skip it
+      if !self.processed_calls.insert(call_id) {
+        // This call was already processed, so return early
+        return;
+      }
       match &**expr {
         Expr::Member(member_expr) => {
           let mut possible_class_name = None;
@@ -214,10 +246,8 @@ impl Visit for CallFinder {
           }
           if let Some(ref obj_name) = possible_class_name {
             let mut new_class_name = None;
-            for instantiation in self.instantiations.iter() {
-              if &instantiation.variable_name == obj_name {
-                new_class_name = Some(instantiation.class_name.clone());
-              }
+            if let Some(instantiation) = self.instantiations.get(obj_name) {
+              new_class_name = Some(instantiation.class_name.clone());
             }
             if let Some(class_name) = new_class_name {
               possible_class_name = Some(class_name);
@@ -322,6 +352,7 @@ impl Visit for CallFinder {
         _ => {}
       }
     }
+    
   }
 
   fn visit_var_declarator(&mut self, var_declarator: &VarDeclarator) {
@@ -332,9 +363,11 @@ impl Visit for CallFinder {
             let class_name = expr.sym.to_string();
             if let Some(var_ident) = &var_declarator.name.as_ident() {
               let var_name = var_ident.sym.to_string();
-              self.instantiations.insert(InstantiationsMap {
+              let instantiation_span = var_ident.span;
+              self.instantiations.insert(var_name.clone(), InstantiationsMap {
                 class_name,
                 variable_name: var_name,
+                instantiation_span,
               });
             }
           }
@@ -439,16 +472,59 @@ impl Visit for CallFinder {
           self.visit_stmt(alt);
         }
       }
+      Stmt::Return(return_stmt) => {
+        if let Some(expr) = &return_stmt.arg {
+          self.visit_expr(expr);
+        }
+        // Handle returning an object expression
+        if let Some(block_stmt) = &return_stmt.arg.as_ref().and_then(|arg| match arg.as_ref() {
+          Expr::Object(object_expr) => Some(Box::new(object_expr.clone())),
+          _ => None,
+        }) {
+          for prop_or_spread in &block_stmt.props {
+            match prop_or_spread {
+              swc_ecma_ast::PropOrSpread::Prop(boxed_prop) => {
+                match &**boxed_prop {
+                  swc_ecma_ast::Prop::KeyValue(key_value_prop) => {
+                    // Handle KeyValue
+                    self.visit_expr(&key_value_prop.value);
+                  }
+                  swc_ecma_ast::Prop::Assign(assign_prop) => {
+                    // Handle Assign
+                    self.visit_expr(&assign_prop.value);
+                  }
+                  swc_ecma_ast::Prop::Getter(getter_prop) => {
+                    // Handle Getter
+                    if let Some(body) = &getter_prop.body {
+                      for stmt in &body.stmts {
+                        self.visit_stmt(stmt);
+                      }
+                    }
+                  }
+                  swc_ecma_ast::Prop::Setter(setter_prop) => {
+                    // Handle Setter
+                    if let Some(body) = &setter_prop.body {
+                      for stmt in &body.stmts {
+                        self.visit_stmt(stmt);
+                      }
+                    }
+                  }
+                  _ => {}
+                }
+              }
+              swc_ecma_ast::PropOrSpread::Spread(spread) => {
+                // Handle Spread syntax
+                self.visit_expr(&spread.expr);
+              }
+              _ => {}
+            }
+          }
+        }
+      }
       _ => {
         // For other kinds of statements, we continue with the default implementation (for now)
         swc_ecma_visit::visit_stmt(self, stmt);
       }
-    }
-  }
-
-  fn visit_expr(&mut self, expr: &Expr) {
-    if let Expr::Call(call_expr) = expr {
-      self.visit_call_expr(call_expr)
     }
   }
 }

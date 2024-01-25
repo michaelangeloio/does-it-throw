@@ -10,7 +10,7 @@ extern crate swc_ecma_ast;
 extern crate swc_ecma_parser;
 extern crate swc_ecma_visit;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use std::vec;
 
@@ -94,10 +94,11 @@ pub fn analyze_code(
   };
   throw_collector.visit_module(&module);
   let mut call_collector = CallFinder {
+    processed_calls: HashSet::new(),
     functions_with_throws: throw_collector.functions_with_throws.clone(),
     calls: HashSet::new(),
     current_class_name: None,
-    instantiations: HashSet::new(),
+    instantiations: HashMap::new(),
     function_name_stack: vec![],
     object_property_stack: vec![],
   };
