@@ -7,7 +7,27 @@
 
 ### Features
 
+* **deps-dev:** bump @biomejs/biome from 1.4.1 to 1.5.3 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump @types/node from 20.10.5 to 20.11.5 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump @types/node from 20.10.5 to 20.11.6 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump bun-types from 1.0.20 to 1.0.25 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump esbuild from 0.19.11 to 0.19.12 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump serde from 1.0.193 to 1.0.195 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump serde_json from 1.0.109 to 1.0.111 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump swc_ecma_ast from 0.110.15 to 0.110.17 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump swc_ecma_ast from 0.110.17 to 0.111.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_parser from 0.141.34 to 0.142.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_visit from 0.96 to 0.97.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_visit from 0.96.15 to 0.96.17 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump vscode-languageserver-textdocument from 1.0.8 to 1.0.11 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump wasm-bindgen from 0.2.89 to 0.2.90 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
 * **jetbrains:** jetbrains implementation ([#119](https://github.com/michaelangeloio/does-it-throw/issues/119)) ([e4d4153](https://github.com/michaelangeloio/does-it-throw/commit/e4d415336da8eb78ef650f2941185a3fa4dc5dd6))
+* LSP now supports workspace folders ([#127](https://github.com/michaelangeloio/does-it-throw/issues/127)) ([960b486](https://github.com/michaelangeloio/does-it-throw/commit/960b486e8cfe4fd5165be4dd200457c7e5b90979))
+
+
+### Bug Fixes
+
+* enhance call to throw logic and handle return statements  ([#140](https://github.com/michaelangeloio/does-it-throw/issues/140)) ([a1bfaf1](https://github.com/michaelangeloio/does-it-throw/commit/a1bfaf16c768aeb49ecaecb991ca6a2b57e71072))
 
 ## [0.4.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-jetbrains-v0.3.3...does-it-throw-jetbrains-v0.4.0) (2024-01-06)
 
