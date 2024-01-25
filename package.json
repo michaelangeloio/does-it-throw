@@ -22,7 +22,12 @@
     "throw finder",
     "throw",
     "javascript",
-    "typescript"
+    "typescript",
+    "lsp",
+    "language server",
+    "exceptions",
+    "extension",
+    "exception finder"
   ],
   "galleryBanner": {
     "color": "#050b1f",
