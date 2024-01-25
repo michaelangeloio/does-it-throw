@@ -14,4 +14,4 @@ bench = false
 swc_common = "0.33"
 swc_ecma_parser = "0.141"
 swc_ecma_ast = "0.110"
-swc_ecma_visit = "0.96"
+swc_ecma_visit = "0.97"
