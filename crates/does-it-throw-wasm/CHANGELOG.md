@@ -8,6 +8,33 @@
   * dependencies
     * does-it-throw bumped from 0.1.14 to 0.1.15
 
+## [0.3.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-wasm-v0.2.0...does-it-throw-wasm-v0.3.0) (2024-01-25)
+
+
+### Features
+
+* **deps-dev:** bump @biomejs/biome from 1.4.1 to 1.5.3 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump @types/node from 20.10.5 to 20.11.5 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump @types/node from 20.10.5 to 20.11.6 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump bun-types from 1.0.20 to 1.0.25 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps-dev:** bump esbuild from 0.19.11 to 0.19.12 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump serde from 1.0.193 to 1.0.195 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump serde_json from 1.0.109 to 1.0.111 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump swc_ecma_ast from 0.110.15 to 0.110.17 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump swc_ecma_ast from 0.110.17 to 0.111.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_parser from 0.141.34 to 0.142.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_visit from 0.96 to 0.97.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_visit from 0.96.15 to 0.96.17 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump vscode-languageserver-textdocument from 1.0.8 to 1.0.11 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+* **deps:** bump wasm-bindgen from 0.2.89 to 0.2.90 ([ea29908](https://github.com/michaelangeloio/does-it-throw/commit/ea29908c94253fc3171738f7fc802a71f9166d75))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * does-it-throw bumped from 0.2.0 to 0.3.0
+
 ## [0.2.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-wasm-v0.1.15...does-it-throw-wasm-v0.2.0) (2024-01-06)
 
 
