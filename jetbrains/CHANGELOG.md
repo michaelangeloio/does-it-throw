@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [0.5.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-jetbrains-v0.4.0...does-it-throw-jetbrains-v0.5.0) (2024-01-25)
+
+
+### Features
+
+* **jetbrains:** jetbrains implementation ([#119](https://github.com/michaelangeloio/does-it-throw/issues/119)) ([e4d4153](https://github.com/michaelangeloio/does-it-throw/commit/e4d415336da8eb78ef650f2941185a3fa4dc5dd6))
+
 ## [0.4.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-jetbrains-v0.3.3...does-it-throw-jetbrains-v0.4.0) (2024-01-06)
 
 

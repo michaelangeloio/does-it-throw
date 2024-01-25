@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.2.0...does-it-throw-v0.3.0) (2024-01-25)
+
+
+### Features
+
+* **deps:** bump swc_ecma_ast from 0.110.17 to 0.111.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_parser from 0.141.34 to 0.142.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+* **deps:** bump swc_ecma_visit from 0.96 to 0.97.1 ([2ae9f64](https://github.com/michaelangeloio/does-it-throw/commit/2ae9f64e149a74502547ed60e1b4737518844b4b))
+
+
+### Bug Fixes
+
+* enhance call to throw logic and handle return statements  ([#140](https://github.com/michaelangeloio/does-it-throw/issues/140)) ([a1bfaf1](https://github.com/michaelangeloio/does-it-throw/commit/a1bfaf16c768aeb49ecaecb991ca6a2b57e71072))
+
 ## [0.2.0](https://github.com/michaelangeloio/does-it-throw/compare/does-it-throw-v0.1.15...does-it-throw-v0.2.0) (2024-01-06)
 
 
