@@ -174,5 +174,8 @@
   "workspaces": [
     "client",
     "server"
-  ]
+  ],
+  "dependencies": {
+    "vscode-languageserver-textdocument": "^1.0.11"
+  }
 }
