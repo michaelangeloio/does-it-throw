@@ -12,6 +12,6 @@ bench = false
 
 [dependencies]
 swc_common = "0.33"
-swc_ecma_parser = "0.142.1"
+swc_ecma_parser = "0.142.2"
 swc_ecma_ast = "0.111.1"
 swc_ecma_visit = "0.97.1"
