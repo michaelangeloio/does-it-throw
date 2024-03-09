@@ -7,3 +7,8 @@ export const someConstThatThrows = () => {
 function callToConstThatThrows4() {
   someConstThatThrows()
 }
+
+
+export const someConstThatDoesNotThrow = () => {
+  console.log('hi khue')
+}
