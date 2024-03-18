@@ -58,7 +58,7 @@
     "@vscode/vsce": "^2.22.0",
     "bun-types": "^1.0.25",
     "chokidar": "^3.5.3",
-    "esbuild": "^0.19.12",
+    "esbuild": "^0.20.2",
     "esbuild-plugin-copy": "^2.1.1",
     "typescript": "5.3.3"
   },
